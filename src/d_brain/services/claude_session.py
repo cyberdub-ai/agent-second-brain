@@ -199,6 +199,17 @@ class ClaudeSession:
 
     # ── lifecycle ────────────────────────────────────────────────────
 
+    # Env vars that must reach the pane: an isolated config dir (so the brain
+    # does NOT inherit the operator's ~/.claude skills/hooks) and the RU egress
+    # proxy (so the spawned claude reaches api.anthropic.com without a 403).
+    _ENV_PASSTHROUGH = (
+        "CLAUDE_CONFIG_DIR",
+        "HTTPS_PROXY",
+        "HTTP_PROXY",
+        "NO_PROXY",
+        "NODE_EXTRA_CA_CERTS",
+    )
+
     def _start_command(self) -> str:
         parts = [shlex.quote(self.claude_bin), "--dangerously-skip-permissions"]
         if self.mcp_config:
@@ -210,7 +221,17 @@ class ClaudeSession:
             ]
         if self.model:
             parts += ["--model", shlex.quote(self.model)]
-        return f"cd {shlex.quote(str(self.work_dir))} && " + " ".join(parts)
+        # tmux new-session inherits the tmux SERVER env, not this process's — a
+        # server started before the unit's Environment= was set would hand the
+        # pane the wrong CLAUDE_CONFIG_DIR/proxy. Pin our own values inline so the
+        # brain is isolated and proxied regardless of when the tmux server booted.
+        env_prefix = " ".join(
+            f"{k}={shlex.quote(os.environ[k])}"
+            for k in self._ENV_PASSTHROUGH
+            if os.environ.get(k)
+        )
+        prefix = f"{env_prefix} " if env_prefix else ""
+        return f"cd {shlex.quote(str(self.work_dir))} && {prefix}" + " ".join(parts)
 
     def _ensure_locked(self) -> None:
         """Create + ready the session if needed. Caller must hold the lock."""

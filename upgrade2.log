@@ -1,0 +1,26 @@
+
+[1m== 1/8 System dependencies (tmux, zram) ==[0m
+
+[1m== 2/8 Pulling latest code ==[0m
+Уже актуально.
+
+[1m== 3/8 Python dependencies (uv sync) ==[0m
+Resolved 38 packages in 7ms
+Checked 37 packages in 10ms
+
+[1m== 4/8 Runtime dir + project pointer ==[0m
+
+[1m== 5/8 Installing dbrain CLI ==[0m
+  installed /usr/local/bin/dbrain
+
+[1m== 6/8 Migrating systemd --user units (d-brain-* → dbrain-*) ==[0m
+
+[1m== 7/8 Guard: no claude -p in the hot path ==[0m
+✅ No claude -p invocation in the hot path.
+
+[1m== 8/8 First health check ==[0m
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8491481453:AAGR4vdn24fZtmfg5zRSgjJEjXvZ4PSIB58/sendMessage "HTTP/1.1 200 OK"
+INFO:__main__:doctor: ok=True
+
+✅ Upgrade complete. Your bot now runs on the persistent interactive
+   session (subscription billing). Check it: dbrain status

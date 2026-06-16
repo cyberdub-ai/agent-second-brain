@@ -20,7 +20,11 @@ ExecStart=%h/.local/bin/uv run python -m d_brain
 Restart=always
 RestartSec=10
 Environment=PYTHONUNBUFFERED=1
-Environment=CLAUDE_CONFIG_DIR=%h/.claude
+# Isolated config dir: the brain must NOT inherit the operator's ~/.claude
+# (skills like validate-idea auto-fire on "идея", AskUserQuestion blocks the
+# pane forever, hooks error). Clean dir holds only Max credentials → vault
+# .claude/ supplies the brain's own skills/persona/rules.
+Environment=CLAUDE_CONFIG_DIR=%h/.dbrain-claude
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 # .44/RU egress: the spawned `claude` (raw binary, no wrapper) reaches
 # api.anthropic.com only through Privoxy→WireGuard→US — a direct RU IP gets 403.
