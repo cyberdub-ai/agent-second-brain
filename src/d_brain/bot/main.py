@@ -7,6 +7,7 @@ from typing import Any
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import Update
@@ -20,9 +21,15 @@ logger = logging.getLogger(__name__)
 
 
 def create_bot(settings: Settings) -> Bot:
-    """Create and configure the Telegram bot."""
+    """Create and configure the Telegram bot.
+
+    api.telegram.org is blocked on a direct RU ISP, so route the Bot API through
+    an explicit proxy when configured (aiogram does not honour *_PROXY env vars).
+    """
+    session = AiohttpSession(proxy=settings.telegram_proxy) if settings.telegram_proxy else None
     return Bot(
         token=settings.telegram_bot_token,
+        session=session,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
 

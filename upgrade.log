@@ -1,0 +1,44 @@
+
+[1m== 1/8 System dependencies (tmux, zram) ==[0m
+
+[1m== 2/8 Pulling latest code ==[0m
+Уже актуально.
+
+[1m== 3/8 Python dependencies (uv sync) ==[0m
+Resolved 38 packages in 1ms
+Checked 37 packages in 0.53ms
+
+[1m== 4/8 Runtime dir + project pointer ==[0m
+
+[1m== 5/8 Installing dbrain CLI ==[0m
+  installed /usr/local/bin/dbrain
+
+[1m== 6/8 Migrating systemd --user units (d-brain-* → dbrain-*) ==[0m
+
+[1m== 7/8 Guard: no claude -p in the hot path ==[0m
+✅ No claude -p invocation in the hot path.
+
+[1m== 8/8 First health check ==[0m
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/alexey-zhuykov/stack/agent-second-brain/src/d_brain/services/doctor.py", line 152, in <module>
+    main()
+    ~~~~^^
+  File "/home/alexey-zhuykov/stack/agent-second-brain/src/d_brain/services/doctor.py", line 140, in main
+    session = get_session(settings)
+  File "/home/alexey-zhuykov/stack/agent-second-brain/src/d_brain/services/runtime.py", line 76, in get_session
+    _session = _build_session(
+        settings,
+        session_name=_persisted_name(settings),
+        runtime_dir=settings.runtime_dir,
+    )
+  File "/home/alexey-zhuykov/stack/agent-second-brain/src/d_brain/services/runtime.py", line 58, in _build_session
+    raise RuntimeError(
+    ...<2 lines>...
+    )
+RuntimeError: persona file missing or invalid: /srv/data/second-brain/deploy/brain-system.md — refusing to start a personality-less brain
+  (doctor reported issues — run 'dbrain status' / 'dbrain logs')
+
+✅ Upgrade complete. Your bot now runs on the persistent interactive
+   session (subscription billing). Check it: dbrain status

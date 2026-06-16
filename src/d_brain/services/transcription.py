@@ -1,47 +1,42 @@
-"""Deepgram transcription service."""
+"""Local Whisper transcription service (OpenAI-compatible endpoint).
+
+Forked from the upstream Deepgram transcriber: voice stays on our own
+faster-whisper container (WHISPER_URL) instead of the Deepgram cloud — no
+per-minute billing and no audio leaving the host.
+"""
 
 import logging
 
-from deepgram import AsyncDeepgramClient
+import httpx
 
 logger = logging.getLogger(__name__)
 
 
-class DeepgramTranscriber:
-    """Service for transcribing audio using Deepgram Nova-3."""
+class WhisperTranscriber:
+    """Transcribe audio via a local OpenAI-compatible Whisper endpoint."""
 
-    def __init__(self, api_key: str) -> None:
-        self.client = AsyncDeepgramClient(api_key=api_key)
+    def __init__(self, whisper_url: str) -> None:
+        self.whisper_url = whisper_url.rstrip("/")
 
     async def transcribe(self, audio_bytes: bytes) -> str:
         """Transcribe audio bytes to text.
 
         Args:
-            audio_bytes: Audio file content
+            audio_bytes: Audio file content (Telegram voice ogg/opus).
 
         Returns:
-            Transcribed text
-
-        Raises:
-            Exception: If transcription fails
+            Transcribed text, or "" if nothing was recognised.
         """
         logger.info("Starting transcription, audio size: %d bytes", len(audio_bytes))
 
-        response = await self.client.listen.v1.media.transcribe_file(
-            request=audio_bytes,
-            model="nova-3",
-            language="ru",
-            punctuate=True,
-            smart_format=True,
-        )
-
-        transcript = (
-            response.results.channels[0].alternatives[0].transcript
-            if response.results
-            and response.results.channels
-            and response.results.channels[0].alternatives
-            else ""
-        )
+        async with httpx.AsyncClient(timeout=120) as client:
+            response = await client.post(
+                f"{self.whisper_url}/v1/audio/transcriptions",
+                files={"file": ("voice.ogg", audio_bytes, "audio/ogg")},
+                data={"model": "Systran/faster-whisper-large-v3", "language": "ru"},
+            )
+            response.raise_for_status()
+            transcript = response.json().get("text", "").strip()
 
         logger.info("Transcription complete: %d chars", len(transcript))
         return transcript

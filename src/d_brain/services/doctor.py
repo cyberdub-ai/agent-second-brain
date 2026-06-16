@@ -112,7 +112,7 @@ def check_env(settings: Any) -> CheckResult:
         k
         for k, v in {
             "TELEGRAM_BOT_TOKEN": settings.telegram_bot_token,
-            "DEEPGRAM_API_KEY": settings.deepgram_api_key,
+            "WHISPER_URL": settings.whisper_url,
         }.items()
         if not v
     ]

@@ -46,7 +46,10 @@ def _persisted_name(settings: Settings) -> str:
 def _build_session(
     settings: Settings, *, session_name: str, runtime_dir: Path
 ) -> ClaudeSession:
-    project_root = settings.vault_path.parent
+    # Persona + mcp-config ship with the CODE. Upstream assumes the vault sits
+    # inside the project (vault.parent == project); here code lives in ~/stack and
+    # the vault in /srv/data (Syncthing), so brain_root overrides that when set.
+    project_root = settings.brain_root or settings.vault_path.parent
     mcp = project_root / "mcp-config.json"
     brain_prompt = project_root / "deploy" / "brain-system.md"
     # Boot assertion: without the persona file the brain would silently start

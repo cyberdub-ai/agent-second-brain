@@ -7,7 +7,7 @@ from d_brain.config import Settings
 def _settings(tmp_path, *, persona: bool = True, **over):
     base = dict(
         telegram_bot_token="t",
-        deepgram_api_key="d",
+        whisper_url="http://127.0.0.1:8000",
         vault_path=tmp_path / "vault",
         runtime_dir=tmp_path / "rt",
         _env_file=None,

@@ -6,7 +6,7 @@ from d_brain.config import Settings
 
 
 def _settings(**over):
-    base = dict(telegram_bot_token="t", deepgram_api_key="d", _env_file=None)
+    base = dict(telegram_bot_token="t", whisper_url="http://127.0.0.1:8000", _env_file=None)
     base.update(over)
     return Settings(**base)
 

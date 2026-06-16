@@ -16,7 +16,14 @@ class Settings(BaseSettings):
     )
 
     telegram_bot_token: str = Field(description="Telegram Bot API token")
-    deepgram_api_key: str = Field(description="Deepgram API key for transcription")
+    whisper_url: str = Field(
+        default="http://127.0.0.1:8000",
+        description="Local OpenAI-compatible Whisper endpoint for voice transcription",
+    )
+    telegram_proxy: str = Field(
+        default="http://127.0.0.1:8118",
+        description="Proxy for api.telegram.org (blocked on direct RU ISP); empty = direct",
+    )
     vault_path: Path = Field(
         default=Path("./vault"),
         description="Path to Obsidian vault directory",
@@ -28,6 +35,11 @@ class Settings(BaseSettings):
     allow_all_users: bool = Field(
         default=False,
         description="Whether to allow access to all users (security risk!)",
+    )
+    brain_root: Path | None = Field(
+        default=None,
+        description="Code dir holding deploy/brain-system.md + mcp-config.json "
+        "(default = vault parent; set when vault lives outside the project)",
     )
 
     # ── persistent tmux session ──────────────────────────────────────
@@ -67,12 +79,12 @@ class Settings(BaseSettings):
         description="Retry delay for a failed one-shot ('at') job",
     )
 
-    @field_validator("runtime_dir", "vault_path", mode="after")
+    @field_validator("runtime_dir", "vault_path", "brain_root", mode="after")
     @classmethod
-    def _expand_user(cls, v: Path) -> Path:
+    def _expand_user(cls, v: Path | None) -> Path | None:
         # pydantic-settings keeps "~" literal; the cron CLI expanduser-s —
         # expand here too or the bot and CLI split into different state dirs.
-        return v.expanduser()
+        return v.expanduser() if v is not None else None
 
     @property
     def cron_dir(self) -> Path:
