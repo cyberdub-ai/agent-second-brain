@@ -16,6 +16,12 @@ Runs 24/7 on a $5 VPS and the Claude subscription you already pay for — zero p
 </p>
 
 <p align="center">
+  <a href="FORK.md">🔧 Fork notes (cyberdub-ai)</a> •
+  <a href="docs/setup-server44.md">Server 44 setup</a> •
+  <a href="docs/user-guide.ru.md">Руководство пользователя</a>
+</p>
+
+<p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
   <img alt="Python 3.12+" src="https://img.shields.io/badge/python-3.12+-blue.svg">
   <a href="https://github.com/smixs/agent-second-brain/stargazers"><img alt="Stars" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Frepos%2Fsmixs%2Fagent-second-brain&query=%24.stargazers_count&label=stars&logo=github&color=blue"></a>
