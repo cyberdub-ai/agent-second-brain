@@ -42,11 +42,24 @@ class ChatSessionManager:
 
         Serialized via the process-wide ask-lock; runs the blocking ask() in a
         worker thread so the event loop stays responsive.
+        Stall errors (session briefly silent) get one automatic retry: the
+        interrupt already sent by ask() recovers the session, so a second
+        attempt usually succeeds.
         """
         async with get_ask_lock():
             res = await asyncio.to_thread(self._session.ask, prompt)
         if res.ok:
             return res.reply or ""
+        if res.status == "error":
+            logger.warning(
+                "session ask for user %d stalled (%s), retrying once",
+                user_id,
+                res.detail,
+            )
+            async with get_ask_lock():
+                res = await asyncio.to_thread(self._session.ask, prompt)
+            if res.ok:
+                return res.reply or ""
         logger.warning("session ask for user %d returned %s", user_id, res.status)
         return _STATUS_MESSAGES.get(res.status, _STATUS_MESSAGES["error"])
 

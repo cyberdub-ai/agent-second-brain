@@ -123,10 +123,11 @@ _STARTING_RE = re.compile(r"Claude Code v\d", re.I)
 # must never be used as an idle signal by itself.
 # Two working signatures: the legacy "esc to interrupt" hint, and the newer
 # spinner with a live elapsed-time + token counter, e.g.
-# "✢ Razzle-dazzling… (44s · ↓1.8k tokens)". Newer Claude Code dropped the
-# hint entirely, so matching only the old string blinded the stall detector
-# and false-killed every turn longer than stall_timeout.
-_WORKING_RE = re.compile(r"esc to interrupt|\(\d+s\s*·")
+# "✢ Razzle-dazzling… (44s · ↓1.8k tokens)" or "(4m 51s · …)".
+# Newer Claude Code dropped the hint entirely, so matching only the old string
+# blinded the stall detector. The optional "Xm " prefix covers sub- and
+# super-60-second turns: \((?:\d+m\s+)?\d+s\s*· matches "(44s ·" and "(4m 51s ·".
+_WORKING_RE = re.compile(r"esc to interrupt|\((?:\d+m\s+)?\d+s\s*·")
 # Idle = a BARE ❯ on its own line (empty input). A menu selector ("❯ 1. Yes…")
 # has text after the chevron and must NOT count — otherwise a turn stuck on an
 # approval/menu prompt would be mistaken for completion (wrap=False).
