@@ -39,9 +39,15 @@ def _inline_echo(rid: str) -> str:
 class FakeTmux:
     """Callable stand-in for subprocess.run over `tmux ...`."""
 
-    def __init__(self, capture_script: list[str], exists: bool = False) -> None:
+    def __init__(
+        self,
+        capture_script: list[str],
+        exists: bool = False,
+        pane_command: str = "claude",
+    ) -> None:
         self._captures = list(capture_script)
         self.exists = exists
+        self.pane_command = pane_command
         self.calls: list[list[str]] = []
 
     def __call__(self, args, **kwargs):  # noqa: ANN001
@@ -52,6 +58,11 @@ class FakeTmux:
             rc = 0 if self.exists else 1
         elif sub == "new-session":
             self.exists = True
+            self.pane_command = "claude"
+        elif sub == "kill-session":
+            self.exists = False
+        elif sub == "display-message":
+            out = self.pane_command
         elif sub == "capture-pane":
             out = (
                 self._captures.pop(0)
@@ -116,6 +127,29 @@ def test_ensure_session_noop_when_present(tmp_path, clock):
     s = make_session(tmp_path, fake, clock)
     s.ensure_session()
     assert "new-session" not in fake.sent_subcommands()
+
+
+def test_ensure_session_recreates_when_pane_dropped_to_shell(tmp_path, clock):
+    # tmux-resurrect restores the session with the old TUI in the scrollback but
+    # a bare shell in the pane: READY is still on screen, yet prompts would be
+    # typed into bash.
+    fake = FakeTmux([READY], exists=True, pane_command="bash")
+    s = make_session(tmp_path, fake, clock)
+    s.ensure_session()
+    assert "kill-session" in fake.sent_subcommands()
+    assert "new-session" in fake.sent_subcommands()
+
+
+def test_is_healthy_false_when_pane_dropped_to_shell(tmp_path, clock):
+    fake = FakeTmux([READY], exists=True, pane_command="bash")
+    s = make_session(tmp_path, fake, clock)
+    assert s.is_healthy() is False
+
+
+def test_is_healthy_true_when_pane_runs_cli(tmp_path, clock):
+    fake = FakeTmux([READY], exists=True, pane_command="claude")
+    s = make_session(tmp_path, fake, clock)
+    assert s.is_healthy() is True
 
 
 def test_ensure_session_handles_trust_prompt(tmp_path, clock):

@@ -62,6 +62,9 @@ _PANE_HEIGHT = "50"
 # large counts like `-S -2000` return EMPTY on this TUI; a modest concrete
 # count works and includes scrollback (pane history ~2000 lines).
 _CAPTURE_SCROLLBACK = "-200"
+# A pane running one of these is a dead brain: the CLI exited (or was never
+# started, e.g. a tmux-resurrect restore) and prompts would go to the shell.
+_SHELL_COMMANDS = frozenset({"bash", "sh", "zsh", "fish", "dash", "ash"})
 
 
 @dataclass
@@ -173,6 +176,22 @@ class ClaudeSession:
     def _session_exists(self) -> bool:
         return self._tmux("has-session", "-t", self.session_name).returncode == 0
 
+    def _pane_command(self) -> str:
+        return self._tmux(
+            "display-message", "-p", "-t", self._target, "#{pane_current_command}"
+        ).stdout.strip()
+
+    def _claude_alive(self) -> bool:
+        """True iff the pane still runs the CLI rather than a bare shell.
+
+        On-screen text is NOT a liveness signal: a tmux-resurrect restore (or a
+        crashed CLI) leaves the pane at a shell prompt with the old TUI still in
+        the scrollback, so classify_state() keeps reading READY off the stale
+        footer while every prompt is typed into bash.
+        """
+        cmd = self._pane_command()
+        return bool(cmd) and cmd not in _SHELL_COMMANDS
+
     def _send_enter(self) -> None:
         self._tmux("send-keys", "-t", self._target, "Enter")
 
@@ -236,7 +255,15 @@ class ClaudeSession:
     def _ensure_locked(self) -> None:
         """Create + ready the session if needed. Caller must hold the lock."""
         if self._session_exists():
-            return
+            if self._claude_alive():
+                return
+            logger.warning(
+                "session %s exists but its pane runs %r, not the CLI — recreating",
+                self.session_name,
+                self._pane_command(),
+            )
+            self._tmux("kill-session", "-t", self.session_name)
+            self._inflight.unlink(missing_ok=True)
         self._ready_flag.unlink(missing_ok=True)
         self._tmux(
             "new-session",
@@ -293,7 +320,7 @@ class ClaudeSession:
                 self._ensure_locked()
 
     def is_healthy(self) -> bool:
-        return self._session_exists()
+        return self._session_exists() and self._claude_alive()
 
     def current_state(self) -> PaneState:
         """Classify the live pane (for the watchdog / doctor)."""
