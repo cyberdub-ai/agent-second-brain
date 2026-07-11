@@ -17,6 +17,7 @@ from d_brain.services.tmux_parse import (
     classify_state,
     extract_reply,
     is_complete,
+    state_evidence,
 )
 
 # ── Real capture excerpts (claude 2.1.168) ──────────────────────────────
@@ -277,6 +278,29 @@ def test_classify_rate_limited():
 
 def test_classify_logged_out():
     assert classify_state(LOGGED_OUT_CAPTURE) == PaneState.LOGGED_OUT
+
+
+# The TUI warns *before* the wall is hit; the session is still fully usable.
+# Observed live 2026-07-11: this aborted a healthy voice turn as "rate_limited"
+# 9s in, while the model went on to answer and write the note.
+APPROACHING_LIMIT_CAPTURE = """\
+  ⚠ Approaching usage limit · resets at 3:00 PM
+❯
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+"""
+
+
+def test_approaching_limit_warning_is_not_a_rate_limit():
+    assert classify_state(APPROACHING_LIMIT_CAPTURE) == PaneState.READY
+
+
+def test_state_evidence_returns_the_offending_line():
+    assert "usage limit" in state_evidence(RATE_LIMIT_CAPTURE)
+    assert "/login" in state_evidence(LOGGED_OUT_CAPTURE)
+
+
+def test_state_evidence_none_on_healthy_pane():
+    assert state_evidence(APPROACHING_LIMIT_CAPTURE) is None
 
 
 def test_classify_unknown_on_empty():

@@ -40,6 +40,7 @@ from d_brain.services.tmux_parse import (
     is_complete,
     is_idle,
     is_working,
+    state_evidence,
     strip_chrome,
 )
 
@@ -445,6 +446,19 @@ class ClaudeSession:
         self._send_text(payload)
         self._send_enter()
 
+    def _blocked(self, state: PaneState, cap: str, log_id: str) -> AskResult:
+        """Turn a blocking pane state into a result, logging what triggered it.
+
+        Both states abort the turn on the strength of one line of TUI text, so
+        a misfire is invisible unless the line itself is on the record.
+        """
+        status = "rate_limited" if state == PaneState.RATE_LIMITED else "logged_out"
+        logger.warning(
+            "%s: %s — triggered by pane line: %r",
+            log_id, status, state_evidence(cap),
+        )
+        return AskResult(status)
+
     # ── ask ──────────────────────────────────────────────────────────
 
     def ask(
@@ -485,13 +499,11 @@ class ClaudeSession:
                 self._inflight.unlink(missing_ok=True)
                 return AskResult("error", detail=f"session start failed: {exc}")
 
-            pre = classify_state(self._capture())
-            if pre == PaneState.RATE_LIMITED:
+            pre_cap = self._capture()
+            pre = classify_state(pre_cap)
+            if pre in (PaneState.RATE_LIMITED, PaneState.LOGGED_OUT):
                 self._inflight.unlink(missing_ok=True)
-                return AskResult("rate_limited")
-            if pre == PaneState.LOGGED_OUT:
-                self._inflight.unlink(missing_ok=True)
-                return AskResult("logged_out")
+                return self._blocked(pre, pre_cap, log_id)
 
             self._send_prompt(prompt, rid, wrap=wrap)
 
@@ -501,24 +513,30 @@ class ClaudeSession:
             idle_streak = 0
             while self._clock() < deadline:
                 cap = self._capture()
+                # A finished answer beats any banner: the reply is proof the
+                # turn ran. Checked FIRST so a stale/soft limit notice in the
+                # chrome cannot discard work the model already delivered.
+                if wrap and is_complete(cap, rid):
+                    self._inflight.unlink(missing_ok=True)
+                    return AskResult("ok", reply=extract_reply(cap, rid))
+                # A real block stops the CLI dead. While the spinner still
+                # runs, the turn is alive and any limit line on screen is a
+                # warning, not a wall — do not abort on it.
                 state = classify_state(cap)
-                if state == PaneState.RATE_LIMITED:
+                if state in (
+                    PaneState.RATE_LIMITED,
+                    PaneState.LOGGED_OUT,
+                ) and not is_working(cap):
                     self._inflight.unlink(missing_ok=True)
-                    return AskResult("rate_limited")
-                if state == PaneState.LOGGED_OUT:
-                    self._inflight.unlink(missing_ok=True)
-                    return AskResult("logged_out")
-                if wrap:
-                    if is_complete(cap, rid):
-                        self._inflight.unlink(missing_ok=True)
-                        return AskResult("ok", reply=extract_reply(cap, rid))
-                elif is_idle(cap):
-                    idle_streak += 1
-                    if idle_streak >= 2:
-                        self._inflight.unlink(missing_ok=True)
-                        return AskResult("ok", reply=strip_chrome(cap))
-                else:
-                    idle_streak = 0
+                    return self._blocked(state, cap, log_id)
+                if not wrap:
+                    if is_idle(cap):
+                        idle_streak += 1
+                        if idle_streak >= 2:
+                            self._inflight.unlink(missing_ok=True)
+                            return AskResult("ok", reply=strip_chrome(cap))
+                    else:
+                        idle_streak = 0
 
                 # The periodic "How is Claude doing?" survey pollutes the
                 # chrome and once made the stall detector interrupt a live

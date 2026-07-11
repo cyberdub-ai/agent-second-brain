@@ -112,8 +112,15 @@ _BYPASS_TITLE_RE = re.compile(
     r"WARNING: Claude Code running in Bypass Permissions mode"
 )
 _BYPASS_MENU_RE = re.compile(r"(?m)^\s*(?:❯\s*)?2\.\s+Yes, I accept")
+# Only a HARD block counts. The TUI also shows an *approaching*-limit banner
+# ("Approaching usage limit · resets at 3pm") on a perfectly usable session —
+# the old loose signature ("usage limit"/"resets at") matched it and aborted
+# live turns with a bogus "limit exhausted". A block always says *reached*
+# (or announces the reset of a limit already hit), never merely names one.
 _RATE_RE = re.compile(
-    r"usage limit|rate limit|limit reached|resets at|5-hour limit|weekly limit",
+    r"(?:usage|rate|5-hour|weekly|opus|session) limit reached"
+    r"|reached your (?:usage|rate|5-hour|weekly) limit"
+    r"|limit will reset at",
     re.I,
 )
 _LOGGED_OUT_RE = re.compile(
@@ -210,6 +217,19 @@ def is_idle(text: str) -> bool:
     if _WORKING_RE.search(chrome):
         return False
     return bool(_IDLE_BARE_RE.search(chrome))
+
+
+def state_evidence(text: str) -> str | None:
+    """The chrome line that triggered RATE_LIMITED / LOGGED_OUT, for logs.
+
+    These two states abort a turn, so a false positive is silent and costly.
+    Callers log the offending line, turning the next misfire into evidence
+    instead of a guess.
+    """
+    for line in _chrome(text).splitlines():
+        if _RATE_RE.search(line) or _LOGGED_OUT_RE.search(line):
+            return line.strip()
+    return None
 
 
 def classify_state(text: str) -> PaneState:

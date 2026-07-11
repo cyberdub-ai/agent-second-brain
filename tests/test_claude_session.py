@@ -270,6 +270,32 @@ def test_ask_ignores_inline_echo_contamination(tmp_path, clock):
     assert res.reply == "PONG"
 
 
+# Live regression 2026-07-11: a limit line in the chrome of a pane whose
+# spinner is still running is a warning, not a wall — the turn finished and
+# wrote its note while the bot told the user "limit exhausted".
+WORKING_WITH_LIMIT_LINE = THINKING + RATE
+
+
+def test_ask_ignores_limit_line_while_the_turn_is_still_working(tmp_path, clock):
+    rid = "work0001"
+    fake = FakeTmux([READY, WORKING_WITH_LIMIT_LINE, _complete(rid)], exists=True)
+    s = make_session(tmp_path, fake, clock, rid=rid)
+    res = s.ask("ping", timeout=60)
+    assert res.status == "ok"
+    assert res.reply == "PONG"
+
+
+def test_ask_returns_the_reply_even_if_a_limit_line_sits_in_the_chrome(
+    tmp_path, clock
+):
+    rid = "done0001"
+    fake = FakeTmux([READY, _complete(rid) + RATE], exists=True)
+    s = make_session(tmp_path, fake, clock, rid=rid)
+    res = s.ask("ping", timeout=60)
+    assert res.status == "ok"
+    assert res.reply == "PONG"
+
+
 def test_ask_detects_rate_limit_without_hanging(tmp_path, clock):
     fake = FakeTmux([RATE], exists=True)
     s = make_session(tmp_path, fake, clock)
