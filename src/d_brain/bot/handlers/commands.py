@@ -4,8 +4,9 @@ from datetime import date
 
 from aiogram import Router
 from aiogram.filters import Command
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import Message
 
+from d_brain.bot.keyboards import get_main_keyboard
 from d_brain.config import get_settings
 from d_brain.services.chat_session import ChatSessionManager
 from d_brain.services.session import SessionStore
@@ -27,10 +28,7 @@ async def cmd_start(message: Message) -> None:
         "/status — статус дня\n"
         "/process — обработать записи\n"
         "/help — справка",
-        # The old persistent reply keyboard is gone. Telegram keeps a persistent
-        # keyboard on the client until someone explicitly removes it, so /start
-        # doubles as the eraser for anyone who still has it pinned.
-        reply_markup=ReplyKeyboardRemove(),
+        reply_markup=get_main_keyboard(),
     )
 
 

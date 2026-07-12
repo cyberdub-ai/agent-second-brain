@@ -37,6 +37,7 @@ def create_bot(settings: Settings) -> Bot:
 def create_dispatcher() -> Dispatcher:
     """Create and configure the dispatcher with routers."""
     from d_brain.bot.handlers import (
+        buttons,
         chat,
         commands,
         process,
@@ -47,6 +48,7 @@ def create_dispatcher() -> Dispatcher:
     # Register routers - ORDER MATTERS
     dp.include_router(commands.router)
     dp.include_router(process.router)
+    dp.include_router(buttons.router)  # Reply keyboard buttons
     dp.include_router(chat.router)  # Catch-all for private chat (LAST)
     return dp
 
