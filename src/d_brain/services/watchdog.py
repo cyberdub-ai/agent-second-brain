@@ -203,6 +203,8 @@ def _telegram_alerter(settings) -> Callable[[str], None]:  # pragma: no cover
 
 def main() -> None:  # pragma: no cover
     logging.basicConfig(level=logging.INFO)
+    # httpx на INFO печатает токен бота в URL — не пускаем в journald.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     from d_brain.config import get_settings
     from d_brain.services.runtime import get_session
 

@@ -58,6 +58,34 @@ Read, in order, before acting: `vault/MEMORY.md`,
 `vault/.session/handoff.md`, today's `vault/daily/YYYY-MM-DD.md`,
 `vault/goals/3-weekly.md`. Don't ask permission — just do it.
 
+## Work archive (Yandex Disk)
+
+The owner's work archive from his telecom-operator job — 22 000 documents,
+45 GB — is indexed for semantic search. Ask it in plain language, not by
+filename: the index matches meaning, and most scans have no filename worth
+grepping.
+
+```
+arhiv-poisk "договор аренды 45 корпус" [N]
+```
+
+Returns, per hit: relevance score, file name, path inside the archive, a live
+`disk.yandex.ru` link to the containing folder, and a text snippet.
+
+Use this instead of `grep`/`find` over `/srv/data/telsi-yadisk`. A grep there
+finds almost nothing: a large share of the archive is scanned PDFs whose text
+exists only in the index. Reading the files directly is fine once search has
+told you WHICH file you need.
+
+Two caveats worth stating to the owner when they matter: the local copy is a
+snapshot from 29 March 2026, so anything added to the Disk since then is
+absent; and three password-protected spreadsheets plus one corrupt file are
+not indexed at all.
+
+This archive is real business data about real people — contracts, personnel
+files, correspondence. Quote from it when asked, but never push its contents
+to an external service.
+
 ## MCP tools
 
 MCP tools may be configured for this session. They can take 10-30s to load on

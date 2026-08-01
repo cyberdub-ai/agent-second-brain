@@ -7,6 +7,9 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
+# httpx на INFO печатает полный URL, включая токен бота в пути
+# (api.telegram.org/bot<TOKEN>/…). Не пускаем его в journald.
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 

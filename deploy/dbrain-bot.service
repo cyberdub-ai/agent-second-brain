@@ -15,7 +15,7 @@ KillMode=process
 # A clean stop/restart exits 143 (SIGTERM); that is success, not a failure, so
 # it must not trigger the OnFailure= alert.
 SuccessExitStatus=143 SIGTERM
-WorkingDirectory=%h/projects/dbrain
+WorkingDirectory=%h/stack/agent-second-brain
 ExecStart=%h/.local/bin/uv run python -m d_brain
 Restart=always
 RestartSec=10
@@ -25,7 +25,7 @@ Environment=PYTHONUNBUFFERED=1
 # pane forever, hooks error). Clean dir holds only Max credentials → vault
 # .claude/ supplies the brain's own skills/persona/rules.
 Environment=CLAUDE_CONFIG_DIR=%h/.dbrain-claude
-Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PATH=%h/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 # .44/RU egress: the spawned `claude` (raw binary, no wrapper) reaches
 # api.anthropic.com only through Privoxy→WireGuard→US — a direct RU IP gets 403.
 # NO_PROXY keeps local Whisper/Ollama/LAN off the proxy. NODE_EXTRA_CA_CERTS

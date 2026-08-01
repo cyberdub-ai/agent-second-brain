@@ -58,10 +58,19 @@ case "$cmd" in
   login)
     echo "🔑 Запускаю вход в Claude (нужна подписка)…"
     echo "Открой ссылку ниже на телефоне/ноутбуке, подтверди и вставь код сюда:"
-    # Pin the config dir to the one the brain runs under (the systemd units set
-    # CLAUDE_CONFIG_DIR=$HOME/.claude), so the new token lands where the
-    # session reads it — not in some other dir the login shell might point to.
-    CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" claude setup-token
+    # Pin the config dir to the one the brain actually runs under: the systemd
+    # units set CLAUDE_CONFIG_DIR=%h/.dbrain-claude. Defaulting to $HOME/.claude
+    # here wrote the token into the OWNER's main Claude config instead — wrong
+    # place for the brain, and it clobbers a live interactive session.
+    BRAIN_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.dbrain-claude}"
+    echo "Конфиг: $BRAIN_CONFIG_DIR"
+    # `claude setup-token` минтит долгоживущий Console-токен и на этом аккаунте
+    # отдаёт 403: подписка Max такой токен выпускать не даёт. Мозг всегда жил на
+    # обычной сессии подписки — в .credentials.json лежал claudeAiOauth, тот же
+    # authMethod "claude.ai", что у рабочей основной сессии. Логинимся так же.
+    CLAUDE_CONFIG_DIR="$BRAIN_CONFIG_DIR" claude auth login --claudeai \
+      --email "${BRAIN_LOGIN_EMAIL:-zhuikovalexei@gmail.com}"
+    CLAUDE_CONFIG_DIR="$BRAIN_CONFIG_DIR" claude auth status
     # Auth is read only at session START. The live tmux brain holds the old
     # (logged-out) auth in memory; `dbrain restart` won't help (KillMode=process
     # keeps the brain alive). Recreate BOTH sessions so the bot rebuilds them

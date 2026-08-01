@@ -132,6 +132,9 @@ def run_cli(session: Any, *, checks: list, alert: Any) -> int:
 
 def main() -> None:  # pragma: no cover
     logging.basicConfig(level=logging.INFO)
+    # httpx на INFO печатает полный URL запроса, а в нём — токен бота
+    # (api.telegram.org/bot<TOKEN>/sendMessage). Это утекало в journald.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     from d_brain.config import get_settings
     from d_brain.services.runtime import get_session
     from d_brain.services.watchdog import _telegram_alerter
