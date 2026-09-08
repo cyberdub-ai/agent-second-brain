@@ -1,6 +1,7 @@
 """Tests for Telegram delivery formatters: splitting and truncation."""
 
 from d_brain.bot.formatters import (
+    format_process_report,
     MAX_RESPONSE_LENGTH,
     split_text,
     truncate_html,
@@ -53,3 +54,17 @@ class TestTruncateHtml:
         out = truncate_html(text, 4096)
         assert len(out) <= 4096
         assert out.endswith("</b>")
+
+
+class TestProcessReportLimit:
+    def test_broken_tags_fallback_respects_limit(self):
+        # Unbalanced HTML sends format_process_report down the plain-text
+        # branch — it must still fit into a single Telegram message.
+        report = {"report": "<b>" + "я" * 9000}
+        assert len(format_process_report(report)) <= MAX_RESPONSE_LENGTH
+
+    def test_deeply_nested_tags_respect_limit(self):
+        # Closing tags are appended AFTER the cut: a fixed reserve is not
+        # enough when nesting is deep.
+        text = "<b><i><u>" * 20 + "x" * 5000
+        assert len(truncate_html(text, max_length=200)) <= 200

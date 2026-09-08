@@ -119,39 +119,48 @@ def _truncate_html_consumed(text: str, max_length: int) -> tuple[str, int]:
     if len(text) <= max_length:
         return text, len(text)
 
-    # Find a safe cut point
-    cut_point = max_length - 50  # Leave room for closing tags and ellipsis
+    # Find a safe cut point. The reserve for "..." plus closing tags is
+    # not known before the tags are counted, so widen it until the
+    # decorated chunk fits.
+    reserve = 50
+    while True:
+        cut_point = max_length - reserve
+        if cut_point <= 0:
+            return text[:max_length], max_length
 
-    # Don't cut in the middle of a tag
-    last_open = text.rfind("<", 0, cut_point)
-    last_close = text.rfind(">", 0, cut_point)
+        # Don't cut in the middle of a tag
+        last_open = text.rfind("<", 0, cut_point)
+        last_close = text.rfind(">", 0, cut_point)
 
-    if last_open > last_close:
-        # We're in the middle of a tag, cut before it
-        cut_point = last_open
+        if last_open > last_close:
+            # We're in the middle of a tag, cut before it
+            cut_point = last_open
 
-    truncated = text[:cut_point]
+        truncated = text[:cut_point]
 
-    # Close any open tags
-    tag_pattern = re.compile(r"<(/?)([a-zA-Z]+)(?:\s[^>]*)?>")
-    open_tags = []
+        # Close any open tags
+        tag_pattern = re.compile(r"<(/?)([a-zA-Z]+)(?:\s[^>]*)?>")
+        open_tags = []
 
-    for match in tag_pattern.finditer(truncated):
-        is_closing = match.group(1) == "/"
-        tag_name = match.group(2).lower()
+        for match in tag_pattern.finditer(truncated):
+            is_closing = match.group(1) == "/"
+            tag_name = match.group(2).lower()
 
-        if tag_name not in ALLOWED_TAGS:
-            continue
+            if tag_name not in ALLOWED_TAGS:
+                continue
 
-        if is_closing and open_tags and open_tags[-1] == tag_name:
-            open_tags.pop()
-        elif not is_closing:
-            open_tags.append(tag_name)
+            if is_closing and open_tags and open_tags[-1] == tag_name:
+                open_tags.pop()
+            elif not is_closing:
+                open_tags.append(tag_name)
 
-    # Add closing tags in reverse order
-    closing_tags = "".join(f"</{tag}>" for tag in reversed(open_tags))
+        # Add closing tags in reverse order
+        closing_tags = "".join(f"</{tag}>" for tag in reversed(open_tags))
 
-    return truncated + "..." + closing_tags, cut_point
+        result = truncated + "..." + closing_tags
+        if len(result) <= max_length:
+            return result, cut_point
+        reserve += len(result) - max_length
 
 
 def format_process_report(report: dict[str, Any]) -> str:
@@ -179,7 +188,7 @@ def format_process_report(report: dict[str, Any]) -> str:
         # Validate tag balance
         if not validate_telegram_html(sanitized):
             # Fall back to plain text if tags are broken
-            return html.escape(raw_report)
+            return truncate_html(html.escape(raw_report), max_length=4096)
 
         # Truncate if too long
         return truncate_html(sanitized, max_length=4096)
