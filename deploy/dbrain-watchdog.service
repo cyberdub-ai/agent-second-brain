@@ -19,7 +19,11 @@ SuccessExitStatus=143 SIGTERM
 # Separate slice so an OOM kill of the brain doesn't take the watchdog down.
 Slice=dbrain-watchdog.slice
 WorkingDirectory=%h/projects/dbrain
-ExecStart=%h/.local/bin/uv run python -m d_brain.services.watchdog
+# Not `uv run`: it keeps a shared flock on ~/.cache/uv/.lock for the whole
+# lifetime of the watchdog (weeks), which blocks `uv cache prune` forever.
+# Sync once (--inexact = what `uv run` did), then start python directly.
+ExecStartPre=%h/.local/bin/uv sync --inexact
+ExecStart=%h/projects/dbrain/.venv/bin/python -m d_brain.services.watchdog
 Restart=always
 RestartSec=10
 Environment=PYTHONUNBUFFERED=1
