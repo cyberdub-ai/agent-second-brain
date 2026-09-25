@@ -11,6 +11,9 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
+# A cold large-v3 model took 112-122 s to answer; 120 s dropped voice messages.
+WHISPER_TIMEOUT = 300
+
 
 class WhisperTranscriber:
     """Transcribe audio via a local OpenAI-compatible Whisper endpoint."""
@@ -29,7 +32,7 @@ class WhisperTranscriber:
         """
         logger.info("Starting transcription, audio size: %d bytes", len(audio_bytes))
 
-        async with httpx.AsyncClient(timeout=120) as client:
+        async with httpx.AsyncClient(timeout=WHISPER_TIMEOUT) as client:
             response = await client.post(
                 f"{self.whisper_url}/v1/audio/transcriptions",
                 files={"file": ("voice.ogg", audio_bytes, "audio/ogg")},
