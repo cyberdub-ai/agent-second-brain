@@ -1,0 +1,39 @@
+[Unit]
+Description=d-brain Telegram bot (drives the persistent Claude session)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+OnFailure=dbrain-notify@%n.service
+
+[Service]
+Type=simple
+# KillMode=process: stopping/restarting the bot must NOT kill the detached
+# tmux brain that lives in this unit's cgroup (the default control-group would
+# take it down). The brain outlives bot restarts; ensure_session re-attaches.
+KillMode=process
+# A clean stop/restart exits 143 (SIGTERM); that is success, not a failure, so
+# it must not trigger the OnFailure= alert.
+SuccessExitStatus=143 SIGTERM
+WorkingDirectory=%h/stack/agent-second-brain
+ExecStart=%h/.local/bin/uv run python -m d_brain
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+# Isolated config dir: the brain must NOT inherit the operator's ~/.claude
+# (skills like validate-idea auto-fire on "идея", AskUserQuestion blocks the
+# pane forever, hooks error). Clean dir holds only Max credentials → vault
+# .claude/ supplies the brain's own skills/persona/rules.
+Environment=CLAUDE_CONFIG_DIR=%h/.dbrain-claude
+Environment=PATH=%h/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+# .44/RU egress: the spawned `claude` (raw binary, no wrapper) reaches
+# api.anthropic.com only through Privoxy→WireGuard→US — a direct RU IP gets 403.
+# NO_PROXY keeps local Whisper/Ollama/LAN off the proxy. NODE_EXTRA_CA_CERTS
+# matches the ~/bin/claude wrapper so the mhr-cfw failover path still trusts TLS.
+Environment=HTTPS_PROXY=http://127.0.0.1:8118
+Environment=HTTP_PROXY=http://127.0.0.1:8118
+Environment=NO_PROXY=127.0.0.1,localhost,::1,192.168.2.44
+Environment=NODE_EXTRA_CA_CERTS=/opt/mhr-cfw/ca/ca.crt
+
+[Install]
+WantedBy=default.target

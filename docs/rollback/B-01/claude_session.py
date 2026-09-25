@@ -428,9 +428,7 @@ class ClaudeSession:
             return  # 0 bytes ⇒ no buffer ⇒ paste-buffer would fail `no buffer`
         buf = f"dbrain_{uuid.uuid4().hex[:6]}"
         self._tmux("load-buffer", "-b", buf, "-", input_text=text)
-        # -p = bracketed paste: without it the TUI sees typed keys and folds
-        # the following Enter into the paste, so the prompt is never sent.
-        self._tmux("paste-buffer", "-p", "-t", self._target, "-b", buf, "-d")
+        self._tmux("paste-buffer", "-t", self._target, "-b", buf, "-d")
         self._sleep(self._paste_settle)
 
     def _send_prompt(self, prompt: str, rid: str, *, wrap: bool = True) -> None:

@@ -247,6 +247,22 @@ def test_send_text_noop_on_empty(tmp_path, clock):
     assert "load-buffer" not in subs and "paste-buffer" not in subs
 
 
+def test_send_text_uses_bracketed_paste(tmp_path, clock):
+    """Regression: without `paste-buffer -p` the TUI takes the paste as typed
+    keys, folds the following Enter into it, and the prompt stays in the
+    input box forever (canary `no reply in 120s`, 2026-09-25)."""
+    recorded: list[list[str]] = []
+
+    def runner(args, **kwargs):
+        recorded.append(args)
+        return subprocess.CompletedProcess(args, 0, stdout="", stderr="")
+
+    s = make_session(tmp_path, runner, clock)
+    s._send_text("line one\n\nline two")
+    pastes = [a for a in recorded if len(a) > 1 and a[1] == "paste-buffer"]
+    assert pastes and "-p" in pastes[0]
+
+
 # ── ask ─────────────────────────────────────────────────────────────────
 
 
