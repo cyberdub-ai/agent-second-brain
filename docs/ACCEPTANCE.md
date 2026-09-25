@@ -1,5 +1,5 @@
 ---
-approved: 2026-09-25T19:59:53+03:00
+approved: 2026-09-25T20:14:54+03:00
 source: docs/PRODUCT-VERDICT.md «До продажи», утверждено владельцем 2026-09-25 18:41 («да»); owner-words.md — 0 реплик (транскриптов проекта нет), пункты собраны руками
 ---
 ## Из слов владельца
@@ -14,10 +14,9 @@ source: docs/PRODUCT-VERDICT.md «До продажи», утверждено в
 - [x] A-09: Заметки пользователя бэкапятся ежедневным снимком vault, doctor валит осмотр, если снимку больше 26 ч (идея агента) — проверка: `grep -c 'def check_backup' src/d_brain/services/doctor.py` ≥ 1 (сейчас 0); после `systemctl --user start dbrain-doctor` → `Result=success` — источник: штурм 2026-09-25 цикл 2, docs/IDEAS.md
 - [x] A-10: README.ru.md честно описывает приватность: голос расшифровывается локальным Whisper, а не Deepgram (идея агента) — проверка: `grep -c 'Whisper' README.ru.md` ≥ 1 (сейчас 0) — источник: штурм 2026-09-25 цикл 2, docs/IDEAS.md
 - [x] A-11: Голосовое не падает на холодной модели Whisper: таймаут транскрибера `WHISPER_TIMEOUT` = 300 с (холодный ответ 112 с при потолке 120) (идея агента) — проверка: `grep -c 'WHISPER_TIMEOUT' src/d_brain/services/transcription.py` ≥ 1 (сейчас 0) — источник: штурм 2026-09-25 цикл 2, docs/IDEAS.md
-
-## Черновик (ждёт да)
 - [ ] A-12: Выкатка и откат бота описаны одной инструкцией `docs/DEPLOY.md` (`git revert` + `systemctl --user restart dbrain-bot`), откат прогнан на живом боте (идея агента) — проверка: `grep -ci 'откат' docs/DEPLOY.md` ≥ 1 (сейчас файла нет); после прогона отката бот `ActiveState=active` — источник: штурм 2026-09-25 цикл 3, docs/IDEAS.md
 - [ ] A-13: Покупатель видит, куда уходят его данные: `PRIVACY.ru.md` (Telegram, Anthropic, локальный Whisper, где лежат снимки, как удалить), ссылка из README.ru.md (идея агента) — проверка: `grep -c 'Anthropic' PRIVACY.ru.md` ≥ 1 (сейчас файла нет); `grep -c 'PRIVACY.ru.md' README.ru.md` ≥ 1 (сейчас 0) — источник: штурм 2026-09-25 цикл 3, docs/IDEAS.md
+
 
 ## Не в эту ночь
 - Push в `main` с переписыванием истории (force-push) — за владельцем; A-04 делается только rebase + обычным push.
