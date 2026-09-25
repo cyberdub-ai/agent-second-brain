@@ -2,8 +2,9 @@
 Description=d-brain Telegram bot (drives the persistent Claude session)
 After=network-online.target
 Wants=network-online.target
-StartLimitIntervalSec=300
-StartLimitBurst=5
+# 0 = no start rate limit: after a crash burst systemd keeps restarting every
+# RestartSec instead of giving up (bot lay dead 22.09–25.09 on StartLimitBurst).
+StartLimitIntervalSec=0
 OnFailure=dbrain-notify@%n.service
 
 [Service]
