@@ -103,3 +103,64 @@ def test_check_claude_version_resolves_binary_outside_path(monkeypatch, tmp_path
     res = doc.check_claude_version()
     assert res.ok
     assert "2.1.0" in res.detail
+
+
+def test_check_restarts_fails_when_counter_grew(tmp_path):
+    # StartLimitIntervalSec=0 silences OnFailure= — a restart loop must
+    # surface through the doctor instead.
+    from d_brain.services.doctor import check_restarts
+
+    state = tmp_path / "nrestarts"
+    first = check_restarts(state, read=lambda: 3)
+    assert first.ok  # first run only records the baseline
+    same = check_restarts(state, read=lambda: 3)
+    assert same.ok
+    grew = check_restarts(state, read=lambda: 5)
+    assert not grew.ok
+    assert "2" in grew.detail
+    assert check_restarts(state, read=lambda: 5).ok  # baseline moved
+
+
+def test_check_restarts_counter_reset_is_ok(tmp_path):
+    # systemctl daemon-reload / reboot resets NRestarts to 0 — not an alarm.
+    from d_brain.services.doctor import check_restarts
+
+    state = tmp_path / "nrestarts"
+    check_restarts(state, read=lambda: 7)
+    assert check_restarts(state, read=lambda: 0).ok
+
+
+def test_check_whisper_ok_on_transcription(monkeypatch):
+    # Goes through the production transcriber — the same path a voice
+    # message takes — with a generated silent WAV.
+    import d_brain.services.doctor as doc
+
+    sent = []
+
+    class FakeTranscriber:
+        def __init__(self, url):
+            sent.append(url)
+
+        async def transcribe(self, audio):
+            sent.append(audio[:4])
+            return ""
+
+    monkeypatch.setattr(doc, "WhisperTranscriber", FakeTranscriber)
+    assert doc.check_whisper("http://127.0.0.1:8000").ok
+    assert sent == ["http://127.0.0.1:8000", b"RIFF"]
+
+
+def test_check_whisper_fails_when_unreachable(monkeypatch):
+    import d_brain.services.doctor as doc
+
+    class DeadTranscriber:
+        def __init__(self, url):
+            pass
+
+        async def transcribe(self, audio):
+            raise doc.httpx.ConnectError("refused")
+
+    monkeypatch.setattr(doc, "WhisperTranscriber", DeadTranscriber)
+    res = doc.check_whisper("http://127.0.0.1:8000")
+    assert not res.ok
+    assert "refused" in res.detail

@@ -15,8 +15,9 @@ solo — правила роли: `~/.claude/skills/autopilot/SKILL.md`. Цел�
 
 ## Цикл 2 — принято из ACCEPTANCE
 
-- [ ] B-06 ← A-06: Doctor тревожит при серии рестартов бота: читает `NRestarts` unit `dbrain-bot` и валит осмотр, если счётчик вырос с прошлого прогона (замена `OnFailure=`, который после `StartLimitIntervalSec=0` молчит) (идея агента) — проверка: `grep -c 'NRestarts' src/d_brain/services/doctor.py` ≥ 1 (сейчас 0); `uv run pytest tests/test_doctor.py` — 0 failed — источник: штурм 2026-09-25, docs/IDEAS.md
-- [ ] B-07 ← A-07: Doctor проверяет local Whisper — голос обещан покупателю и вживую не проверен (идея агента) — проверка: `grep -c 'def check_whisper' src/d_brain/services/doctor.py` ≥ 1 (сейчас 0); после `systemctl --user start dbrain-doctor` → `Result=success` — источник: штурм 2026-09-25, docs/IDEAS.md
+- [x] B-06 ← A-06: Doctor тревожит при серии рестартов бота: читает `NRestarts` unit `dbrain-bot` и валит осмотр, если счётчик вырос с прошлого прогона (замена `OnFailure=`, который после `StartLimitIntervalSec=0` молчит) (идея агента) — проверка: `grep -c 'NRestarts' src/d_brain/services/doctor.py` ≥ 1 (сейчас 0); `uv run pytest tests/test_doctor.py` — 0 failed — источник: штурм 2026-09-25, docs/IDEAS.md
+- [x] B-07 ← A-07: Doctor проверяет local Whisper — голос обещан покупателю и вживую не проверен (идея агента) — проверка: `grep -c 'def check_whisper' src/d_brain/services/doctor.py` ≥ 1 (сейчас 0); после `systemctl --user start dbrain-doctor` → `Result=success` — источник: штурм 2026-09-25, docs/IDEAS.md
+  - ✅ 2026-09-25: grep NRestarts=2, def check_whisper=1; pytest 261 passed; `systemctl --user start dbrain-doctor` → Result=success, ok=True (Whisper ответил через боевой WhisperTranscriber)
 
 ## ⛔ Не в эту ночь
 - Push в `main` с переписыванием истории (force-push) — за владельцем; A-04 делается только rebase + обычным push.

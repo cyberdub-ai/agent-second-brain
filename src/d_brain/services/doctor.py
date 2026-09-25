@@ -9,13 +9,20 @@ Run by a systemd timer and as the final step of install (install success ==
 first green).
 """
 
+import asyncio
+import io
 import logging
 import shutil
 import subprocess
+import wave
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+import httpx
+
+from d_brain.services.transcription import WhisperTranscriber
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +128,51 @@ def check_env(settings: Any) -> CheckResult:
     )
 
 
+def _systemd_nrestarts(unit: str = "dbrain-bot") -> int:
+    out = subprocess.run(
+        ["systemctl", "--user", "show", unit, "-p", "NRestarts", "--value"],
+        capture_output=True,
+        text=True,
+        timeout=15,
+    )
+    return int(out.stdout.strip())
+
+
+def check_restarts(
+    state_file: Path, *, read: Callable[[], int] = _systemd_nrestarts
+) -> CheckResult:
+    # StartLimitIntervalSec=0 means systemd never gives up on the bot, so
+    # OnFailure= never fires — a restart loop is only visible as NRestarts
+    # growing between two doctor runs.
+    now = read()
+    prev = int(state_file.read_text()) if state_file.exists() else None
+    state_file.write_text(str(now))
+    if prev is None or now <= prev:  # first run, or counter reset by reboot
+        return CheckResult("restarts", True, f"рестартов бота: {now}")
+    return CheckResult(
+        "restarts", False, f"бот перезапускался {now - prev} раз с прошлого осмотра"
+    )
+
+
+def _silent_wav(seconds: float = 1.0, rate: int = 16_000) -> bytes:
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(b"\0\0" * int(rate * seconds))
+    return buf.getvalue()
+
+
+def check_whisper(whisper_url: str) -> CheckResult:
+    # Same path a voice message takes; a cold large-v3 model needs up to ~2 min.
+    try:
+        asyncio.run(WhisperTranscriber(whisper_url).transcribe(_silent_wav()))
+    except (httpx.HTTPError, ValueError) as exc:
+        return CheckResult("whisper", False, str(exc) or type(exc).__name__)
+    return CheckResult("whisper", True, "распознавание голоса отвечает")
+
+
 def run_cli(session: Any, *, checks: list, alert: Any) -> int:
     """Run the checks, deliver the report, map health to an exit code —
     upgrade.sh and the systemd OnFailure= hook key off that code."""
@@ -145,6 +197,8 @@ def main() -> None:  # pragma: no cover
         lambda: check_disk(settings.runtime_dir),
         lambda: check_claude_version(),
         lambda: check_env(settings),
+        lambda: check_restarts(settings.runtime_dir / "doctor-nrestarts"),
+        lambda: check_whisper(settings.whisper_url),
     ]
     raise SystemExit(
         run_cli(session, checks=checks, alert=_telegram_alerter(settings))
