@@ -103,3 +103,11 @@ push: не удался (fatal: unable to access 'https://github.com/smixs/agent
 
 ### Для покупателя изменилось
 Утренний осмотр теперь сообщает, если бот уходит в цикл перезапусков и если перестало работать распознавание голоса.
+
+## Цикл 3 — 25.09.2026
+
+### Сделано
+- B-09 (A-09): снимок vault в ~/.dbrain/backups из process.sh до обработки, ротация 14 дн; doctor check_backup (26 ч); dbrain-doctor Result=success; 0594f44
+- B-10 (A-10): README.ru: 5× Whisper, 0× Deepgram; уточнено, что прочитанное агентом из vault уходит в Anthropic; коммит README
+- B-11 (A-11): WHISPER_TIMEOUT=300 в transcription.py, тест; бот перезапущен 20:09:25 active; 870bba7
+- B-08 (A-08): git add/commit только -- vault, push удалён; тест test_process_git_scope; e9717d8

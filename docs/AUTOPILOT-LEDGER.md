@@ -22,9 +22,9 @@ solo — правила роли: `~/.claude/skills/autopilot/SKILL.md`. Цел�
 
 - [x] B-08 ← A-08: Ночной `process.sh` коммитит только vault и не пушит в чужой `origin` — `git add -A` по всему репо уже унёс недоделанный код в коммиты «process daily» (идея агента) — проверка: `grep -c 'add -A -- vault' scripts/process.sh` ≥ 2 (сейчас 0); `grep -c 'git push' scripts/process.sh` = 0 — источник: штурм 2026-09-25 цикл 2, docs/IDEAS.md
   - ✅ 2026-09-25: `git add -A -- vault` ×2, `git commit … -- vault`, push удалён; `tests/test_process_git_scope.py`; песочница: staged код вне vault в коммит не попал. 264 passed.
-- [ ] B-09 ← A-09: Заметки пользователя бэкапятся ежедневным снимком vault, doctor валит осмотр, если снимку больше 26 ч (идея агента) — проверка: `grep -c 'def check_backup' src/d_brain/services/doctor.py` ≥ 1 (сейчас 0); после `systemctl --user start dbrain-doctor` → `Result=success` — источник: штурм 2026-09-25 цикл 2, docs/IDEAS.md
-- [ ] B-10 ← A-10: README.ru.md честно описывает приватность: голос расшифровывается локальным Whisper, а не Deepgram (идея агента) — проверка: `grep -c 'Whisper' README.ru.md` ≥ 1 (сейчас 0) — источник: штурм 2026-09-25 цикл 2, docs/IDEAS.md
-- [ ] B-11 ← A-11: Голосовое не падает на холодной модели Whisper: таймаут транскрибера `WHISPER_TIMEOUT` = 300 с (холодный ответ 112 с при потолке 120) (идея агента) — проверка: `grep -c 'WHISPER_TIMEOUT' src/d_brain/services/transcription.py` ≥ 1 (сейчас 0) — источник: штурм 2026-09-25 цикл 2, docs/IDEAS.md
+- [x] B-09 ← A-09: Заметки пользователя бэкапятся ежедневным снимком vault, doctor валит осмотр, если снимку больше 26 ч (идея агента) — проверка: `grep -c 'def check_backup' src/d_brain/services/doctor.py` ≥ 1 (сейчас 0); после `systemctl --user start dbrain-doctor` → `Result=success` — источник: штурм 2026-09-25 цикл 2, docs/IDEAS.md
+- [x] B-10 ← A-10: README.ru.md честно описывает приватность: голос расшифровывается локальным Whisper, а не Deepgram (идея агента) — проверка: `grep -c 'Whisper' README.ru.md` ≥ 1 (сейчас 0) — источник: штурм 2026-09-25 цикл 2, docs/IDEAS.md
+- [x] B-11 ← A-11: Голосовое не падает на холодной модели Whisper: таймаут транскрибера `WHISPER_TIMEOUT` = 300 с (холодный ответ 112 с при потолке 120) (идея агента) — проверка: `grep -c 'WHISPER_TIMEOUT' src/d_brain/services/transcription.py` ≥ 1 (сейчас 0) — источник: штурм 2026-09-25 цикл 2, docs/IDEAS.md
 
 ## ⛔ Не в эту ночь
 - Push в `main` с переписыванием истории (force-push) — за владельцем; A-04 делается только rebase + обычным push.
