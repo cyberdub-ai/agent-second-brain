@@ -127,6 +127,7 @@ push: не удался (fatal: unable to access 'https://github.com/smixs/agent
 - Черновик A-12 (инструкция выкатки и отката + прогон отката) и A-13 (`PRIVACY.ru.md`) — «да» / правки.
 ### Где мы
 ACCEPTANCE 10/11 [x]; остался A-04 (за владельцем). Гейт готовности 3/10 ✓: тесты, мониторинг, бэкапы.
+push: не удался (fatal: unable to access 'https://github.com/smixs/agent-second-brain.git/': The requested URL returned error: 403)
 ### Нужно от вас — сейчас
 - Отправить `main` в ремоут `fork` — команда в docs/OWNER-ACTIONS.md (B-04).
 ### Нужно от вас — можно на самый конец
