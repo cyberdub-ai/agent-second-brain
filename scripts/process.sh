@@ -55,9 +55,9 @@ if [ "$DAILY_SIZE" -lt 50 ]; then
     uv run .claude/skills/autograph/scripts/graph.py health . || echo "Graph rebuild failed (non-critical)"
     cd "$PROJECT_DIR"
 
-    git add -A
-    git commit -m "chore: process daily $TODAY" || true
-    git push || true
+    # Only the vault: code in the repo is not ours to commit, origin is upstream
+    git add -A -- vault
+    git commit -m "chore: process daily $TODAY" -- vault || true
     echo "=== Done (empty daily, graph-only) ==="
     exit 0
 fi
@@ -105,10 +105,9 @@ echo "=== Memory decay ==="
 uv run .claude/skills/autograph/scripts/engine.py decay . || echo "Memory decay failed (non-critical)"
 cd "$PROJECT_DIR"
 
-# Git commit
-git add -A
-git commit -m "chore: process daily $TODAY" || true
-git push || true
+# Git commit — only the vault, never push (origin is someone else's upstream)
+git add -A -- vault
+git commit -m "chore: process daily $TODAY" -- vault || true
 
 # Send to Telegram
 if [ -n "$REPORT_CLEAN" ] && [ -n "$CHAT_ID" ]; then
