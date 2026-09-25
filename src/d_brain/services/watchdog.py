@@ -83,6 +83,7 @@ class Watchdog:
         self._last_alert_ts = 0.0
         self._alert_repeats = 0
         self._stuck_since: float | None = None
+        self._input_since: float | None = None
 
     def _is_hung(self, state: PaneState) -> bool:
         # Hang model (paired with ask()'s stall detector): silence is NOT a
@@ -96,6 +97,22 @@ class Watchdog:
             self._stuck_since = now
             return False
         return now - self._stuck_since >= self._stall_threshold
+
+    def _is_input_stuck(self, state: PaneState) -> bool:
+        # READY with text left in the input box and no turn running: the Enter
+        # was lost, the prompt will never be answered. Same persistence rule.
+        if (
+            state != PaneState.READY
+            or self.session.is_working()
+            or not self.session.has_pending_input()
+        ):
+            self._input_since = None
+            return False
+        now = self._clock()
+        if self._input_since is None:
+            self._input_since = now
+            return False
+        return now - self._input_since >= self._stall_threshold
 
     def _maybe_alert(self, key: str, msg: str) -> None:
         now = self._clock()
@@ -163,6 +180,10 @@ class Watchdog:
 
         if self._is_hung(state):
             return self._recover("hung", "♻️ Мозг завис — перезапустил.")
+        if self._is_input_stuck(state):
+            return self._recover(
+                "stuck_input", "♻️ Промпт завис в поле ввода — перезапустил мозг."
+            )
 
         if state == PaneState.READY:
             self._inflight.unlink(missing_ok=True)  # clear any orphan marker

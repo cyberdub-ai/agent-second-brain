@@ -219,6 +219,27 @@ def is_idle(text: str) -> bool:
     return bool(_IDLE_BARE_RE.search(chrome))
 
 
+_RULE_RE = re.compile(r"^\s*─+\s*$")
+# The empty input box shows a dim example ("❯ Try "fix lint errors"");
+# capture-pane drops the dimming, so it is recognised by shape.
+_PLACEHOLDER_RE = re.compile(r'^Try ".*"$')
+
+
+def has_pending_input(text: str) -> bool:
+    """True iff the input box (between the last two box rules) holds text.
+
+    A prompt that sits there with no active turn was pasted but never
+    submitted — the Enter was lost, so nothing will ever answer it.
+    """
+    lines = text.splitlines()
+    rules = [i for i, ln in enumerate(lines) if _RULE_RE.match(ln)]
+    if len(rules) < 2:
+        return False
+    box = "\n".join(lines[rules[-2] + 1 : rules[-1]]).strip()
+    box = box.removeprefix("❯").strip()
+    return bool(box) and not _PLACEHOLDER_RE.match(box)
+
+
 def state_evidence(text: str) -> str | None:
     """The chrome line that triggered RATE_LIMITED / LOGGED_OUT, for logs.
 

@@ -36,6 +36,7 @@ from d_brain.services.tmux_parse import (
     PaneState,
     classify_state,
     extract_reply,
+    has_pending_input,
     has_survey_prompt,
     is_complete,
     is_idle,
@@ -340,6 +341,10 @@ class ClaudeSession:
     def is_working(self) -> bool:
         """True iff the pane shows an active turn (for the watchdog)."""
         return is_working(self._capture())
+
+    def has_pending_input(self) -> bool:
+        """True iff text sits unsent in the input box (for the watchdog)."""
+        return has_pending_input(self._capture())
 
     def force_recover(self) -> bool:
         """Watchdog entry point: take the lock non-blocking; if free, kill and

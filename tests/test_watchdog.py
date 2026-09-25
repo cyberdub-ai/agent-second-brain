@@ -13,9 +13,16 @@ from d_brain.services.watchdog import Watchdog
 
 class FakeSession:
     def __init__(
-        self, *, healthy=True, state=PaneState.READY, recover_ok=True, working=False
+        self,
+        *,
+        healthy=True,
+        state=PaneState.READY,
+        recover_ok=True,
+        working=False,
+        pending_input=False,
     ):
         self._healthy = healthy
+        self.pending_input = pending_input
         self.state = state
         self._recover_ok = recover_ok
         self.working = working
@@ -29,6 +36,9 @@ class FakeSession:
 
     def is_working(self) -> bool:
         return self.working
+
+    def has_pending_input(self) -> bool:
+        return self.pending_input
 
     def force_recover(self) -> bool:
         self.recovered += 1
@@ -198,6 +208,47 @@ def test_persistent_fault_alert_backs_off(tmp_path):
         clock["now"] += 1800.0
     # Fixed-hourly would fire ~8 times; back-off fires at 0h,1h,3h,7h = 4.
     assert len(alerts) == 4
+
+
+# ── stuck input (prompt left in the input box, Enter lost) ───────────────
+
+
+def test_stuck_input_is_recovered_after_threshold(tmp_path):
+    sess = FakeSession(pending_input=True)
+    clock = {"now": 1000.0}
+    alerts = []
+    wd = make_wd(tmp_path, sess, clock=clock, alerts=alerts)
+    assert wd.check_once() == "healthy"  # first sighting only starts the timer
+    clock["now"] += 299.0
+    assert wd.check_once() == "healthy"
+    clock["now"] += 2.0
+    assert wd.check_once() == "recovered_stuck_input"
+    assert sess.recovered == 1
+    assert alerts
+
+
+def test_stuck_input_timer_resets_when_input_clears(tmp_path):
+    sess = FakeSession(pending_input=True)
+    clock = {"now": 1000.0}
+    wd = make_wd(tmp_path, sess, clock=clock)
+    wd.check_once()
+    clock["now"] += 200.0
+    sess.pending_input = False
+    wd.check_once()
+    sess.pending_input = True
+    clock["now"] += 200.0
+    assert wd.check_once() == "healthy"
+    assert sess.recovered == 0
+
+
+def test_stuck_input_not_recovered_while_working(tmp_path):
+    sess = FakeSession(pending_input=True, working=True)
+    clock = {"now": 1000.0}
+    wd = make_wd(tmp_path, sess, clock=clock)
+    wd.check_once()
+    clock["now"] += 1000.0
+    assert wd.check_once() == "healthy"
+    assert sess.recovered == 0
 
 
 # ── disk + status ─────────────────────────────────────────────────────────

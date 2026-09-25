@@ -502,3 +502,37 @@ def test_is_working_false_at_idle():
     from d_brain.services.tmux_parse import is_working
 
     assert not is_working("❯\n  ⏵⏵ bypass permissions on (shift+tab to cycle)\n")
+
+
+# ── pending input (prompt left in the input box) ─────────────────────────
+
+_STATUS = (
+    "  hello | Opus 4.8 (1M context) | ~/p\n"
+    "  ⏵⏵ bypass permissions on (shift+tab to cycle)\n"
+)
+_RULE = "────────────────────\n"
+
+
+def test_has_pending_input_false_on_empty_prompt():
+    from d_brain.services.tmux_parse import has_pending_input
+
+    assert not has_pending_input("transcript\n" + _FOOTER)
+
+
+def test_has_pending_input_false_on_placeholder():
+    from d_brain.services.tmux_parse import has_pending_input
+
+    pane = "transcript\n" + _RULE + '❯ Try "fix lint errors"\n' + _RULE + _STATUS
+    assert not has_pending_input(pane)
+
+
+def test_has_pending_input_true_on_stuck_multiline_prompt():
+    from d_brain.services.tmux_parse import has_pending_input
+
+    pane = (
+        "transcript\n" + _RULE
+        + "❯ Reply with exactly DBRAIN_OK and nothing else.\n\n"
+        + "  When done, wrap your ENTIRE reply between <<<R:ab>>> and <<<E:ab>>>.\n"
+        + _RULE + _STATUS
+    )
+    assert has_pending_input(pane)
