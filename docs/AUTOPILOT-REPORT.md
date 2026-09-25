@@ -52,3 +52,54 @@ push: не удался (fatal: unable to access 'https://github.com/smixs/agent
 Портал: НЕ ПУБЛИКОВАНО — страницы нет, сборка: st(s) -> projects.json
 Built 348 project(s) -> /home/alexey-zhuykov/cyberdub-ai-infrastructure/iq-portal/dist
 Deployed -> /srv/data/iq-landings/portal (pages: new only; index.html + assets: refreshed)
+
+## Цикл 2 — 25.09.2026
+
+### Сделано
+- B-06 (A-06): NRestarts в doctor (check_restarts), pytest 261 passed, dbrain-doctor Result=success; коммит 20e2869
+- B-07 (A-07): check_whisper через боевой WhisperTranscriber (тишина WAV), dbrain-doctor Result=success ok=True; коммит 20e2869
+
+### Цель
+Прод-готовность по docs/ACCEPTANCE.md: пункты цикла 2 (A-06, A-07).
+
+### Задеплоено и как проверено
+- doctor (код подхватывается при каждом прогоне таймера): `systemctl --user start dbrain-doctor` → `Result=success`, `doctor: ok=True`, Whisper ответил через боевой `WhisperTranscriber`; `uv run pytest` → 261 passed; `ruff` чисто.
+
+### Откаты
+- Код doctor: `git revert 20e2869`. Файл `~/.dbrain/doctor-nrestarts` — база счётчика, удаление безопасно.
+
+### Не сделано
+- B-04 (A-04): отправка `main` в ремоут `fork` отбита сторожем — за владельцем.
+
+### Требует решения
+- Отправка `main` в `fork` (команда — в OWNER-ACTIONS).
+- Критерий A-04 → `fork/main..HEAD` = 0.
+- Утвердить черновик A-08…A-11.
+
+### Где мы
+ACCEPTANCE 6/11 [x] (4 новых пункта — черновик), гейт готовности 2/10 ✓.
+push: не удался (fatal: unable to access 'https://github.com/smixs/agent-second-brain.git/': The requested URL returned error: 403)
+
+### Нужно от вас — сейчас
+- **Отправить `main` в `fork`** — команда в `docs/OWNER-ACTIONS.md` (fast-forward; личных заметок в коммитах нет — проверено по диффу `fork/main..HEAD`).
+
+### Нужно от вас — можно на самый конец
+- **Критерий A-04**: заменить на `fork/main..HEAD` = 0 — «да, fork» / правки.
+- **Черновик A-08…A-11** — «да» / правки.
+
+### Что агент ещё сделает до прода
+- A-08…A-11 после утверждения; гейт: безопасность, бэкапы, юр. страницы, скорость, деплой и откат.
+
+### Штурм
+- `process.sh` коммитит только vault и не отправляет в `origin` · безопасность · S · **в черновик** · к проду: гейт «безопасность»
+- Ежедневный снимок vault + `check_backup` в doctor · надёжность · M · **в черновик** · к проду: гейт «бэкапы»
+- README.ru.md: локальный Whisper вместо Deepgram · юр./доверие · S · **в черновик** · к проду: гейт «юр. страницы»
+- `WHISPER_TIMEOUT` = 300 с · скорость · S · **в черновик** · к проду: гейт «скорость»
+- SEO и дизайн — «н/п» для Telegram-бота · поддержка · S · в бэклог · решение владельца
+- Прогрев Whisper в healthcheck · скорость · S · в бэклог · к проду: нет
+
+### Лимит
+неделя: 18.0% сейчас (на старте 17.0%).
+
+### Для покупателя изменилось
+Утренний осмотр теперь сообщает, если бот уходит в цикл перезапусков и если перестало работать распознавание голоса.
