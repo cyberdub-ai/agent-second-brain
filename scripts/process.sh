@@ -34,6 +34,14 @@ CHAT_ID="${CHAT_ID%%,*}"  # first id only — the admin gets the report
 
 echo "=== d-brain processing for $TODAY ==="
 
+# ── Vault snapshot BEFORE the agent rewrites anything; doctor alarms if >26 h old ──
+# ceiling: same disk as the vault, 14 nightly copies; next step — rsync off-host
+BACKUP_DIR="${RUNTIME_DIR:-$HOME/.dbrain}/backups"
+mkdir -p "$BACKUP_DIR"
+tar -czf "$BACKUP_DIR/vault-$TODAY.tgz" -C "$PROJECT_DIR" vault \
+    || echo "BACKUP: vault snapshot failed — doctor will flag it"
+find "$BACKUP_DIR" -name 'vault-*.tgz' -mtime +14 -delete
+
 # ── ORIENT PHASE: pre-flight checks ──
 DAILY_FILE="$VAULT_DIR/daily/$TODAY.md"
 HANDOFF_FILE="$VAULT_DIR/.session/handoff.md"

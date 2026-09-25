@@ -32,3 +32,10 @@ def test_every_commit_is_scoped_to_vault():
     commits = [line for line in _code_lines() if re.search(r"\bgit commit\b", line)]
     assert commits
     assert all("-- vault" in line for line in commits), commits
+
+
+def test_vault_snapshot_taken_before_processing():
+    text = SCRIPT.read_text()
+    snap = text.index('vault-$TODAY.tgz')
+    assert snap < text.index("d_brain.pipeline daily")
+    assert snap < text.index("empty daily, graph-only")

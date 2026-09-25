@@ -164,3 +164,27 @@ def test_check_whisper_fails_when_unreachable(monkeypatch):
     res = doc.check_whisper("http://127.0.0.1:8000")
     assert not res.ok
     assert "refused" in res.detail
+
+
+def test_check_backup_fails_without_snapshot(tmp_path):
+    from d_brain.services.doctor import check_backup
+
+    res = check_backup(tmp_path / "backups")
+    assert not res.ok
+    assert "нет" in res.detail
+
+
+def test_check_backup_fresh_ok_stale_fails(tmp_path):
+    import os
+    import time
+
+    from d_brain.services.doctor import check_backup
+
+    snap = tmp_path / "vault-2026-09-25.tgz"
+    snap.write_bytes(b"x")
+    assert check_backup(tmp_path).ok
+    old = time.time() - 27 * 3600
+    os.utime(snap, (old, old))
+    stale = check_backup(tmp_path)
+    assert not stale.ok
+    assert "27" in stale.detail

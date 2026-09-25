@@ -14,6 +14,7 @@ import io
 import logging
 import shutil
 import subprocess
+import time
 import wave
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -154,6 +155,17 @@ def check_restarts(
     )
 
 
+def check_backup(backup_dir: Path, max_age_hours: float = 26) -> CheckResult:
+    # process.sh snapshots the vault nightly; a missed night is still green
+    # at the 08:00 run only if the previous snapshot is under 26 h old.
+    snaps = sorted(backup_dir.glob("vault-*.tgz"), key=lambda p: p.stat().st_mtime)
+    if not snaps:
+        return CheckResult("backup", False, f"нет снимков vault в {backup_dir}")
+    age = (time.time() - snaps[-1].stat().st_mtime) / 3600
+    detail = f"снимок vault {age:.0f} ч назад: {snaps[-1].name}"
+    return CheckResult("backup", age <= max_age_hours, detail)
+
+
 def _silent_wav(seconds: float = 1.0, rate: int = 16_000) -> bytes:
     buf = io.BytesIO()
     with wave.open(buf, "wb") as w:
@@ -199,6 +211,7 @@ def main() -> None:  # pragma: no cover
         lambda: check_env(settings),
         lambda: check_restarts(settings.runtime_dir / "doctor-nrestarts"),
         lambda: check_whisper(settings.whisper_url),
+        lambda: check_backup(settings.runtime_dir / "backups"),
     ]
     raise SystemExit(
         run_cli(session, checks=checks, alert=_telegram_alerter(settings))
