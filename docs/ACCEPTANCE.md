@@ -1,5 +1,5 @@
 ---
-approved: 2026-09-25T19:06:40+03:00
+approved: 2026-09-25T19:44:03+03:00
 source: docs/PRODUCT-VERDICT.md «До продажи», утверждено владельцем 2026-09-25 18:41 («да»); owner-words.md — 0 реплик (транскриптов проекта нет), пункты собраны руками
 ---
 ## Из слов владельца
@@ -8,6 +8,8 @@ source: docs/PRODUCT-VERDICT.md «До продажи», утверждено в
 - [x] A-03: Watchdog распознаёт «промпт висит в поле ввода» (текст в строке ввода, модель не работает дольше порога) и очищает строку — проверка: `grep -c 'def test_.*stuck_input' tests/test_watchdog.py` ≥ 1 (сейчас 0); `uv run pytest tests/test_watchdog.py` — 0 failed — источник: PRODUCT-VERDICT.md, «До продажи» п.3, утверждено владельцем 2026-09-25 «да»
 - [ ] A-04: Ветка `main` сведена с `origin/main` — проверка: `git rev-list --count HEAD..origin/main` → 0 (сейчас 1) и `git rev-list --count origin/main..HEAD` → 0 после push — источник: PRODUCT-VERDICT.md, «До продажи» п.4, утверждено владельцем 2026-09-25 «да»
 - [x] A-05: Утренний осмотр снова зелёный — проверка: после прогона `dbrain-doctor` (08:00 или ручной `systemctl --user start dbrain-doctor`) `systemctl --user show dbrain-doctor -p Result` → `Result=success` (сейчас `exit-code`) — источник: PRODUCT-VERDICT.md, путь покупателя шаг 6, утверждено владельцем 2026-09-25 «да»
+- [ ] A-06: Doctor тревожит при серии рестартов бота: читает `NRestarts` unit `dbrain-bot` и валит осмотр, если счётчик вырос с прошлого прогона (замена `OnFailure=`, который после `StartLimitIntervalSec=0` молчит) (идея агента) — проверка: `grep -c 'NRestarts' src/d_brain/services/doctor.py` ≥ 1 (сейчас 0); `uv run pytest tests/test_doctor.py` — 0 failed — источник: штурм 2026-09-25, docs/IDEAS.md
+- [ ] A-07: Doctor проверяет local Whisper — голос обещан покупателю и вживую не проверен (идея агента) — проверка: `grep -c 'def check_whisper' src/d_brain/services/doctor.py` ≥ 1 (сейчас 0); после `systemctl --user start dbrain-doctor` → `Result=success` — источник: штурм 2026-09-25, docs/IDEAS.md
 
 ## Не в эту ночь
 - Push в `main` с переписыванием истории (force-push) — за владельцем; A-04 делается только rebase + обычным push.
@@ -16,6 +18,3 @@ source: docs/PRODUCT-VERDICT.md «До продажи», утверждено в
 - Причина падения бота 22.09 04:06 — журнал ротирован; гипотеза «`uv cache prune`» опровергнута (он по воскресеньям 05:15).
 - Транскрипция голоса через local Whisper — вживую не проверялась.
 
-## Черновик (ждёт да)
-- [ ] A-06: Doctor тревожит при серии рестартов бота: читает `NRestarts` unit `dbrain-bot` и валит осмотр, если счётчик вырос с прошлого прогона (замена `OnFailure=`, который после `StartLimitIntervalSec=0` молчит) (идея агента) — проверка: `grep -c 'NRestarts' src/d_brain/services/doctor.py` ≥ 1 (сейчас 0); `uv run pytest tests/test_doctor.py` — 0 failed — источник: штурм 2026-09-25, docs/IDEAS.md
-- [ ] A-07: Doctor проверяет local Whisper — голос обещан покупателю и вживую не проверен (идея агента) — проверка: `grep -c 'def check_whisper' src/d_brain/services/doctor.py` ≥ 1 (сейчас 0); после `systemctl --user start dbrain-doctor` → `Result=success` — источник: штурм 2026-09-25, docs/IDEAS.md

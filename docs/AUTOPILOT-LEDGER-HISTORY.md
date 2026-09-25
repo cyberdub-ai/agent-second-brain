@@ -1,4 +1,4 @@
-# AUTOPILOT-LEDGER — agent-second-brain, цикл 2 с 2026-09-25
+# AUTOPILOT-LEDGER — agent-second-brain, цикл 1 с 2026-09-25
 
 ## Роль
 
@@ -12,11 +12,6 @@ solo — правила роли: `~/.claude/skills/autopilot/SKILL.md`. Цел�
 - [~] B-04 ← A-04: Ветка `main` сведена с `origin/main` — проверка: `git rev-list --count HEAD..origin/main` → 0 (сейчас 1) и `git rev-list --count origin/main..HEAD` → 0 после push — источник: PRODUCT-VERDICT.md, «До продажи» п.4, утверждено владельцем 2026-09-25 «да»
   - ⏳ ждёт владельца (2026-09-25): upstream `origin/main` (7828ed6) влит merge-коммитом, `HEAD..origin/main` = 0, тесты 257 passed. Rebase отменён: `origin` — чужой upstream smixs, rebase переписал бы 18 опубликованных коммитов форка. Push сторож автопилота отбил. Осталось отправить `main` в ремоут `fork` (fast-forward). Критерий `origin/main..HEAD` = 0 недостижим без push в чужой smixs — предлагаю заменить на `fork/main..HEAD` = 0.
 - [x] B-05 ← A-05: Утренний осмотр снова зелёный — проверка: после прогона `dbrain-doctor` (08:00 или ручной `systemctl --user start dbrain-doctor`) `systemctl --user show dbrain-doctor -p Result` → `Result=success` (сейчас `exit-code`) — источник: PRODUCT-VERDICT.md, путь покупателя шаг 6, утверждено владельцем 2026-09-25 «да»
-
-## Цикл 2 — принято из ACCEPTANCE
-
-- [ ] B-06 ← A-06: Doctor тревожит при серии рестартов бота: читает `NRestarts` unit `dbrain-bot` и валит осмотр, если счётчик вырос с прошлого прогона (замена `OnFailure=`, который после `StartLimitIntervalSec=0` молчит) (идея агента) — проверка: `grep -c 'NRestarts' src/d_brain/services/doctor.py` ≥ 1 (сейчас 0); `uv run pytest tests/test_doctor.py` — 0 failed — источник: штурм 2026-09-25, docs/IDEAS.md
-- [ ] B-07 ← A-07: Doctor проверяет local Whisper — голос обещан покупателю и вживую не проверен (идея агента) — проверка: `grep -c 'def check_whisper' src/d_brain/services/doctor.py` ≥ 1 (сейчас 0); после `systemctl --user start dbrain-doctor` → `Result=success` — источник: штурм 2026-09-25, docs/IDEAS.md
 
 ## ⛔ Не в эту ночь
 - Push в `main` с переписыванием истории (force-push) — за владельцем; A-04 делается только rebase + обычным push.

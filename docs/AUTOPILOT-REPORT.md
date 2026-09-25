@@ -33,6 +33,7 @@
 - B-03 сделан перезапуском мозга, а не очисткой строки: клавишная очистка рискует выходом из Claude Code (`C-c`) или меню отката (`Esc Esc`). Цена — теряется контекст разговора панели.
 ### Где мы
 ACCEPTANCE 4/5 [x]; остался A-04 (за владельцем). Гейт готовности (docs/PROD-READINESS.md): ✓ тесты, мониторинг; остальное ☐.
+push: не удался (fatal: unable to access 'https://github.com/smixs/agent-second-brain.git/': The requested URL returned error: 403)
 ### Нужно от вас — сейчас
 - Отправить `main` в ремоут `fork` — готовая команда в docs/OWNER-ACTIONS.md (B-04).
 ### Нужно от вас — можно на самый конец
@@ -47,3 +48,7 @@ ACCEPTANCE 4/5 [x]; остался A-04 (за владельцем). Гейт г
 неделя: 17.0% сейчас (на старте 16.0%).
 ### Для покупателя изменилось
 Бот снова отвечает: вопрос в Telegram доходит до мозга и получает ответ (раньше висел в поле ввода); бот больше не ляжет на дни после серии падений.
+
+Портал: НЕ ПУБЛИКОВАНО — страницы нет, сборка: st(s) -> projects.json
+Built 348 project(s) -> /home/alexey-zhuykov/cyberdub-ai-infrastructure/iq-portal/dist
+Deployed -> /srv/data/iq-landings/portal (pages: new only; index.html + assets: refreshed)
