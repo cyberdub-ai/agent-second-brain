@@ -52,10 +52,10 @@ async def cmd_process(message: Message) -> None:
     async with get_ask_lock():
         report = await process_with_progress()
 
-    # Commit and push changes
+    # Commit the vault locally; origin is someone else's upstream, never push
     if "error" not in report:
         today = date.today().isoformat()
-        await asyncio.to_thread(git.commit_and_push, f"chore: process daily {today}")
+        await asyncio.to_thread(git.commit_changes, f"chore: process daily {today}")
 
     # Format and send report
     formatted = format_process_report(report)

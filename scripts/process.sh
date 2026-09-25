@@ -37,8 +37,8 @@ echo "=== d-brain processing for $TODAY ==="
 # ── Vault snapshot BEFORE the agent rewrites anything; doctor alarms if >26 h old ──
 # ceiling: same disk as the vault, 14 nightly copies; next step — rsync off-host
 BACKUP_DIR="${RUNTIME_DIR:-$HOME/.dbrain}/backups"
-mkdir -p "$BACKUP_DIR"
-tar -czf "$BACKUP_DIR/vault-$TODAY.tgz" -C "$PROJECT_DIR" vault \
+mkdir -p "$BACKUP_DIR" && chmod 700 "$BACKUP_DIR"
+(umask 077; tar -czf "$BACKUP_DIR/vault-$TODAY.tgz" -C "$PROJECT_DIR" vault) \
     || echo "BACKUP: vault snapshot failed — doctor will flag it"
 find "$BACKUP_DIR" -name 'vault-*.tgz' -mtime +14 -delete
 

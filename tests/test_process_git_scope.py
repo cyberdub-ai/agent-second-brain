@@ -39,3 +39,9 @@ def test_vault_snapshot_taken_before_processing():
     snap = text.index('vault-$TODAY.tgz')
     assert snap < text.index("d_brain.pipeline daily")
     assert snap < text.index("empty daily, graph-only")
+
+
+def test_backup_dir_closed_to_group():
+    code = "\n".join(_code_lines())
+    assert 'chmod 700 "$BACKUP_DIR"' in code
+    assert re.search(r"umask 077;\s*tar -czf", code)

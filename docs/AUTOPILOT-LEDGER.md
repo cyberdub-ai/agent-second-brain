@@ -33,8 +33,8 @@ solo — правила роли: `~/.claude/skills/autopilot/SKILL.md`. Цел�
 
 ## Цикл 5 — принято из ACCEPTANCE
 
-- [ ] B-14 ← A-14: Команда `/process` в боте только коммитит vault и ничего не отправляет в ремоут — как `process.sh` после A-08; PRIVACY.ru.md поправлен синхронно (идея агента) — проверка: `grep -c 'commit_and_push' src/d_brain/bot/handlers/process.py` = 0 (сейчас 1); `uv run pytest` — 0 failed — источник: штурм 2026-09-25 цикл 4, docs/IDEAS.md (срочно: безопасность)
-- [ ] B-15 ← A-15: Снимки vault закрыты от группы: `process.sh` создаёт `~/.dbrain/backups` под `umask 077` и приводит права к 700 (идея агента) — проверка: `stat -c %a ~/.dbrain/backups` = 700 (сейчас 770) — источник: штурм 2026-09-25 цикл 4, docs/IDEAS.md
+- [x] B-14 ← A-14: Команда `/process` в боте только коммитит vault и ничего не отправляет в ремоут — как `process.sh` после A-08; PRIVACY.ru.md поправлен синхронно (идея агента) — проверка: `grep -c 'commit_and_push' src/d_brain/bot/handlers/process.py` = 0 (сейчас 1); `uv run pytest` — 0 failed — источник: штурм 2026-09-25 цикл 4, docs/IDEAS.md (срочно: безопасность)
+- [x] B-15 ← A-15: Снимки vault закрыты от группы: `process.sh` создаёт `~/.dbrain/backups` под `umask 077` и приводит права к 700 (идея агента) — проверка: `stat -c %a ~/.dbrain/backups` = 700 (сейчас 770) — источник: штурм 2026-09-25 цикл 4, docs/IDEAS.md
 
 ## ⛔ Не в эту ночь
 - Push в `main` с переписыванием истории (force-push) — за владельцем; A-04 делается только rebase + обычным push.

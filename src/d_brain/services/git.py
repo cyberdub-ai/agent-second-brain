@@ -25,7 +25,7 @@ class VaultGit:
 
     def get_status(self) -> str:
         """Get git status."""
-        result = self._run_git("status", "--porcelain")
+        result = self._run_git("status", "--porcelain", "--", ".")
         return result.stdout
 
     def has_changes(self) -> bool:
@@ -33,7 +33,7 @@ class VaultGit:
         return bool(self.get_status().strip())
 
     def commit_changes(self, message: str) -> bool:
-        """Stage all changes and commit.
+        """Stage and commit vault changes only.
 
         Args:
             message: Commit message
@@ -45,14 +45,14 @@ class VaultGit:
             logger.info("No changes to commit")
             return False
 
-        # Stage all changes
-        add_result = self._run_git("add", "-A")
+        # Only the vault: it sits inside the project repo, code is not ours to commit
+        add_result = self._run_git("add", "-A", "--", ".")
         if add_result.returncode != 0:
             logger.error("Git add failed: %s", add_result.stderr)
             return False
 
         # Commit
-        commit_result = self._run_git("commit", "-m", message)
+        commit_result = self._run_git("commit", "-m", message, "--", ".")
         if commit_result.returncode != 0:
             logger.error("Git commit failed: %s", commit_result.stderr)
             return False
