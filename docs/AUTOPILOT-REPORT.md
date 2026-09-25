@@ -147,3 +147,34 @@ push: не удался (fatal: unable to access 'https://github.com/smixs/agent
 ### Сделано
 - B-13 (A-13): PRIVACY.ru.md (6c862e3): Telegram, Anthropic, локальный Whisper, git-push /process в форк (goals/, about.md), снимки ~/.dbrain/backups 14 дн, удаление; ссылка из README.ru.md. grep Anthropic=3, grep PRIVACY.ru.md в README=1
 - B-12 (A-12): DEPLOY.md (9495341); прогон на живом боте: учебный 958c0f8 → restart → git revert (7f41717) → restart → ActiveState=active SubState=running NRestarts=0, Traceback 0, polling @cyberdub_second_brain_bot; doctor Result=success; brain-сессию не убивали — doc-only коммит
+### Цель
+Прод-готовность по docs/ACCEPTANCE.md: выкатка и откат бота описаны и прогнаны вживую, покупатель видит, куда уходят его данные.
+### Задеплоено и как проверено
+- B-12: под `deploy-net` учебный коммит 958c0f8 → `systemctl --user restart dbrain-bot` → `active`; `git revert` (7f41717) → restart → `ActiveState=active`, `SubState=running`, `NRestarts=0`, в журнале 0 Traceback, polling `@cyberdub_second_brain_bot` поднялся; `systemctl --user start dbrain-doctor` → `Result=success`; `grep -ci 'откат' docs/DEPLOY.md` → 9
+- B-13: `grep -c 'Anthropic' PRIVACY.ru.md` → 3; `grep -c 'PRIVACY.ru.md' README.ru.md` → 1; факты сверены с кодом (`api.telegram.org` — единственный внешний URL, `WHISPER_URL` по умолчанию `127.0.0.1:8000`, снимки 14 дн в `process.sh`, `.env` 600)
+- тесты не гонялись: код не менялся, только документы
+### Откаты
+- `docs/rollback/B-12/undo.sh` (рестарт бота) — не применялся; B-12/B-13 — `git revert` своих коммитов (9495341, 6c862e3)
+- `.gitignore` (строка `docs/autopilot/`) — правка прошлого цикла, не закоммичена, не трогал
+### Не сделано
+- B-04: отправка `main` в `fork` — по-прежнему за владельцем (сторож отбивает push). Платежей нет.
+### Требует решения
+- Отправить `main` в ремоут `fork` (рекомендую): fast-forward, команда — docs/OWNER-ACTIONS.md.
+- Черновик A-14 (`/process` в боте перестаёт отправлять vault в ремоут, срочно: безопасность) и A-15 (права снимков 700) — «да» / правки.
+### Где мы
+ACCEPTANCE 12/13 [x]; остался A-04 (за владельцем). Гейт готовности 5/10 ✓: тесты, мониторинг, бэкапы, деплой и откат, юр. страницы.
+push: не удался (fatal: unable to access 'https://github.com/smixs/agent-second-brain.git/': The requested URL returned error: 403)
+### Нужно от вас — сейчас
+- Отправить `main` в ремоут `fork` — команда в docs/OWNER-ACTIONS.md (B-04).
+### Нужно от вас — можно на самый конец
+- Черновик A-14, A-15: «да» / правки.
+### Что агент ещё сделает до прода
+- После «да»: A-14 (хендлер `/process` без отправки в ремоут + тест, PRIVACY синхронно), A-15 (`~/.dbrain/backups` 700).
+- После отправки `main` в `fork`: закрыть B-04, отметить гейт «функционал по ACCEPTANCE», перевести upstream `main` на `fork/main`.
+- Открыты SEO, дизайн (для Telegram-бота — предлагаю «н/п»), скорость (нужен порог от владельца).
+### Штурм
+4 идеи, в черновик 2 (A-14, A-15), остальные в бэклог — docs/IDEAS.md. Находка ночи: хендлер `/process` в боте всё ещё зовёт `commit_and_push`, а `main` отслеживает чужой upstream smixs.
+### Лимит
+неделя: 20.0% сейчас (на старте 19.0%).
+### Для покупателя изменилось
+Появилась страница «Куда уходят ваши данные» (PRIVACY.ru.md): кто что видит, где лежат заметки и снимки, как всё удалить. Появилась инструкция выкатки и отката (docs/DEPLOY.md), откат проверен на живом боте.

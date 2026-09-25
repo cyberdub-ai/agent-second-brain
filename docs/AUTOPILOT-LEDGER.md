@@ -1,4 +1,4 @@
-# AUTOPILOT-LEDGER — agent-second-brain, цикл 4 с 2026-09-25
+# AUTOPILOT-LEDGER — agent-second-brain, цикл 5 с 2026-09-25
 
 ## Роль
 
@@ -30,6 +30,11 @@ solo — правила роли: `~/.claude/skills/autopilot/SKILL.md`. Цел�
 
 - [x] B-12 ← A-12: Выкатка и откат бота описаны одной инструкцией `docs/DEPLOY.md` (`git revert` + `systemctl --user restart dbrain-bot`), откат прогнан на живом боте (идея агента) — проверка: `grep -ci 'откат' docs/DEPLOY.md` ≥ 1 (сейчас файла нет); после прогона отката бот `ActiveState=active` — источник: штурм 2026-09-25 цикл 3, docs/IDEAS.md
 - [x] B-13 ← A-13: Покупатель видит, куда уходят его данные: `PRIVACY.ru.md` (Telegram, Anthropic, локальный Whisper, где лежат снимки, как удалить), ссылка из README.ru.md (идея агента) — проверка: `grep -c 'Anthropic' PRIVACY.ru.md` ≥ 1 (сейчас файла нет); `grep -c 'PRIVACY.ru.md' README.ru.md` ≥ 1 (сейчас 0) — источник: штурм 2026-09-25 цикл 3, docs/IDEAS.md
+
+## Цикл 5 — принято из ACCEPTANCE
+
+- [ ] B-14 ← A-14: Команда `/process` в боте только коммитит vault и ничего не отправляет в ремоут — как `process.sh` после A-08; PRIVACY.ru.md поправлен синхронно (идея агента) — проверка: `grep -c 'commit_and_push' src/d_brain/bot/handlers/process.py` = 0 (сейчас 1); `uv run pytest` — 0 failed — источник: штурм 2026-09-25 цикл 4, docs/IDEAS.md (срочно: безопасность)
+- [ ] B-15 ← A-15: Снимки vault закрыты от группы: `process.sh` создаёт `~/.dbrain/backups` под `umask 077` и приводит права к 700 (идея агента) — проверка: `stat -c %a ~/.dbrain/backups` = 700 (сейчас 770) — источник: штурм 2026-09-25 цикл 4, docs/IDEAS.md
 
 ## ⛔ Не в эту ночь
 - Push в `main` с переписыванием истории (force-push) — за владельцем; A-04 делается только rebase + обычным push.
