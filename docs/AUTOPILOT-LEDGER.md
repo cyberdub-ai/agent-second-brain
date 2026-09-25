@@ -28,8 +28,8 @@ solo — правила роли: `~/.claude/skills/autopilot/SKILL.md`. Цел�
 
 ## Цикл 4 — принято из ACCEPTANCE
 
-- [ ] B-12 ← A-12: Выкатка и откат бота описаны одной инструкцией `docs/DEPLOY.md` (`git revert` + `systemctl --user restart dbrain-bot`), откат прогнан на живом боте (идея агента) — проверка: `grep -ci 'откат' docs/DEPLOY.md` ≥ 1 (сейчас файла нет); после прогона отката бот `ActiveState=active` — источник: штурм 2026-09-25 цикл 3, docs/IDEAS.md
-- [ ] B-13 ← A-13: Покупатель видит, куда уходят его данные: `PRIVACY.ru.md` (Telegram, Anthropic, локальный Whisper, где лежат снимки, как удалить), ссылка из README.ru.md (идея агента) — проверка: `grep -c 'Anthropic' PRIVACY.ru.md` ≥ 1 (сейчас файла нет); `grep -c 'PRIVACY.ru.md' README.ru.md` ≥ 1 (сейчас 0) — источник: штурм 2026-09-25 цикл 3, docs/IDEAS.md
+- [x] B-12 ← A-12: Выкатка и откат бота описаны одной инструкцией `docs/DEPLOY.md` (`git revert` + `systemctl --user restart dbrain-bot`), откат прогнан на живом боте (идея агента) — проверка: `grep -ci 'откат' docs/DEPLOY.md` ≥ 1 (сейчас файла нет); после прогона отката бот `ActiveState=active` — источник: штурм 2026-09-25 цикл 3, docs/IDEAS.md
+- [x] B-13 ← A-13: Покупатель видит, куда уходят его данные: `PRIVACY.ru.md` (Telegram, Anthropic, локальный Whisper, где лежат снимки, как удалить), ссылка из README.ru.md (идея агента) — проверка: `grep -c 'Anthropic' PRIVACY.ru.md` ≥ 1 (сейчас файла нет); `grep -c 'PRIVACY.ru.md' README.ru.md` ≥ 1 (сейчас 0) — источник: штурм 2026-09-25 цикл 3, docs/IDEAS.md
 
 ## ⛔ Не в эту ночь
 - Push в `main` с переписыванием истории (force-push) — за владельцем; A-04 делается только rebase + обычным push.

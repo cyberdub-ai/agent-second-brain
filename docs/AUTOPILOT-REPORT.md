@@ -141,3 +141,9 @@ push: не удался (fatal: unable to access 'https://github.com/smixs/agent
 неделя: 19.0% сейчас (на старте 19.0%).
 ### Для покупателя изменилось
 Заметки теперь каждую ночь сохраняются в архив, и утренний осмотр предупредит, если архив устарел. Голосовые не теряются, пока модель распознавания просыпается. Ночная обработка больше не уносит чужой код в коммиты. README честно пишет, куда уходят данные.
+
+## Цикл 4 — 25.09.2026
+
+### Сделано
+- B-13 (A-13): PRIVACY.ru.md (6c862e3): Telegram, Anthropic, локальный Whisper, git-push /process в форк (goals/, about.md), снимки ~/.dbrain/backups 14 дн, удаление; ссылка из README.ru.md. grep Anthropic=3, grep PRIVACY.ru.md в README=1
+- B-12 (A-12): DEPLOY.md (9495341); прогон на живом боте: учебный 958c0f8 → restart → git revert (7f41717) → restart → ActiveState=active SubState=running NRestarts=0, Traceback 0, polling @cyberdub_second_brain_bot; doctor Result=success; brain-сессию не убивали — doc-only коммит
