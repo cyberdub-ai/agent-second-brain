@@ -15,3 +15,7 @@ source: docs/PRODUCT-VERDICT.md «До продажи», утверждено в
 ## Не проверено
 - Причина падения бота 22.09 04:06 — журнал ротирован; гипотеза «`uv cache prune`» опровергнута (он по воскресеньям 05:15).
 - Транскрипция голоса через local Whisper — вживую не проверялась.
+
+## Черновик (ждёт да)
+- [ ] A-06: Doctor тревожит при серии рестартов бота: читает `NRestarts` unit `dbrain-bot` и валит осмотр, если счётчик вырос с прошлого прогона (замена `OnFailure=`, который после `StartLimitIntervalSec=0` молчит) (идея агента) — проверка: `grep -c 'NRestarts' src/d_brain/services/doctor.py` ≥ 1 (сейчас 0); `uv run pytest tests/test_doctor.py` — 0 failed — источник: штурм 2026-09-25, docs/IDEAS.md
+- [ ] A-07: Doctor проверяет local Whisper — голос обещан покупателю и вживую не проверен (идея агента) — проверка: `grep -c 'def check_whisper' src/d_brain/services/doctor.py` ≥ 1 (сейчас 0); после `systemctl --user start dbrain-doctor` → `Result=success` — источник: штурм 2026-09-25, docs/IDEAS.md
