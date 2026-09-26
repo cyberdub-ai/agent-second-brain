@@ -536,3 +536,27 @@ def test_has_pending_input_true_on_stuck_multiline_prompt():
         + _RULE + _STATUS
     )
     assert has_pending_input(pane)
+
+
+def test_has_pending_input_false_on_dim_prompt_suggestion():
+    # 26.09 12:37: after a turn Claude Code greys a suggested follow-up into
+    # the input box; the watchdog took it for a lost prompt and killed the brain.
+    from d_brain.services.tmux_parse import has_pending_input
+
+    pane = (
+        "transcript\n" + _RULE
+        + "\x1b[39m❯\xa0\x1b[2mда, заведи структуру целей\x1b[0m\n"
+        + _RULE + _STATUS
+    )
+    assert not has_pending_input(pane)
+
+
+def test_has_pending_input_true_on_typed_text_with_ansi():
+    from d_brain.services.tmux_parse import has_pending_input
+
+    pane = (
+        "transcript\n" + _RULE
+        + "\x1b[39m❯\xa0\x1b[38;5;2mчто у меня в целях?\x1b[0m\n"
+        + _RULE + _STATUS
+    )
+    assert has_pending_input(pane)

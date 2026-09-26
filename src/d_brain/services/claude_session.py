@@ -344,7 +344,10 @@ class ClaudeSession:
 
     def has_pending_input(self) -> bool:
         """True iff text sits unsent in the input box (for the watchdog)."""
-        return has_pending_input(self._capture())
+        # -e keeps SGR attributes: the dim ghost hint must be told from text.
+        return has_pending_input(
+            self._tmux("capture-pane", "-t", self._target, "-p", "-e").stdout
+        )
 
     def force_recover(self) -> bool:
         """Watchdog entry point: take the lock non-blocking; if free, kill and

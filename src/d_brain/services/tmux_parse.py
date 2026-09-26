@@ -223,6 +223,38 @@ _RULE_RE = re.compile(r"^\s*─+\s*$")
 # The empty input box shows a dim example ("❯ Try "fix lint errors"");
 # capture-pane drops the dimming, so it is recognised by shape.
 _PLACEHOLDER_RE = re.compile(r'^Try ".*"$')
+_SGR_RE = re.compile(r"\x1b\[([0-9;]*)m")
+_CSI_RE = re.compile(r"\x1b\[[0-9;?<>=]*[ -/]*[@-~]")
+
+
+def _sgr_dim(params: str, dim: bool) -> bool:
+    """Dim state after one SGR sequence (38/48 colour args are skipped)."""
+    codes = params.split(";") if params else ["0"]
+    i = 0
+    while i < len(codes):
+        code = codes[i]
+        if code in ("38", "48", "58"):
+            i += 3 if codes[i + 1 : i + 2] == ["5"] else 5
+            continue
+        if code in ("", "0", "22"):
+            dim = False
+        elif code == "2":
+            dim = True
+        i += 1
+    return dim
+
+
+def _drop_dim(line: str) -> str:
+    """Remove dim (SGR 2) spans and all remaining escapes from one line."""
+    out, dim, pos = [], False, 0
+    for m in _SGR_RE.finditer(line):
+        if not dim:
+            out.append(line[pos : m.start()])
+        dim = _sgr_dim(m.group(1), dim)
+        pos = m.end()
+    if not dim:
+        out.append(line[pos:])
+    return _CSI_RE.sub("", "".join(out))
 
 
 def has_pending_input(text: str) -> bool:
@@ -230,8 +262,10 @@ def has_pending_input(text: str) -> bool:
 
     A prompt that sits there with no active turn was pasted but never
     submitted — the Enter was lost, so nothing will ever answer it.
+    Accepts `capture-pane -e` output: dim text is Claude Code's ghost hint
+    (placeholder or suggested follow-up), not typed input, and is dropped.
     """
-    lines = text.splitlines()
+    lines = [_drop_dim(ln) for ln in text.splitlines()]
     rules = [i for i, ln in enumerate(lines) if _RULE_RE.match(ln)]
     if len(rules) < 2:
         return False
