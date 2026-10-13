@@ -76,6 +76,40 @@ def _runner(store, session, *, deliver=None, alert=None, clock=None, **over):
     return CronRunner(store, session, **base)
 
 
+async def test_unknown_outcome_disables_exact_job_without_recovery_or_retry(tmp_path):
+    store = _store(tmp_path)
+    _add_job(store, "uncertain", kind="at")
+    _add_job(store, "other", next_run=NOW + timedelta(days=1))
+    session = FakeSession([AskResult("unknown")])
+    runner = _runner(store, session)
+    await runner.tick()
+    await runner.tick()
+    jobs = {j.id: j for j in store.load()}
+    assert not jobs["uncertain"].enabled
+    assert jobs["uncertain"].state.last_status == "unknown"
+    assert jobs["uncertain"].state.next_run is None
+    assert jobs["other"].enabled
+    assert len(session.asked) == 1 and session.recovered == 0
+    assert session.controls == []
+
+
+async def test_codex_completed_job_is_not_reexecuted_after_delivery_failure(tmp_path):
+    store = _store(tmp_path)
+    _add_job(store, "completed", kind="at")
+    session = FakeSession([AskResult("ok", reply="done")])
+    session.supports_safe_replay = False
+
+    async def delivery_failed(*args):
+        raise OSError("fixture delivery uncertain")
+
+    runner = _runner(store, session, deliver=delivery_failed)
+    await runner.tick()
+    await runner.tick()
+    job = store.load()[0]
+    assert not job.enabled and job.state.last_status == "unknown"
+    assert len(session.asked) == 1
+
+
 # ── ticker semantics ─────────────────────────────────────────────────
 
 

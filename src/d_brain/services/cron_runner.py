@@ -140,6 +140,10 @@ class CronRunner:
         )
         now = self.clock()
 
+        if res.status == "unknown":
+            self._record_failure(job, now, status="unknown", count=False)
+            return
+
         if res.status == "rate_limited":
             logger.warning("cron job %s skipped: subscription rate limit", job.id)
             self._record_failure(job, now, status="rate_limited", count=False)
@@ -166,7 +170,11 @@ class CronRunner:
                 # The work happened but the user never saw it: keep the job
                 # (one-shots retry) and count the failure.
                 self._record_failure(
-                    job, now, status="deliver_error", detail=delivery_error, count=True
+                    job, now,
+                    status=("deliver_error" if getattr(
+                        self.session, "supports_safe_replay", True
+                    ) else "unknown"),
+                    detail=delivery_error, count=True
                 )
             else:
                 self._record_success(job, now, silent=silent)
@@ -225,6 +233,10 @@ class CronRunner:
             current.state.last_run = now.isoformat()
             current.state.last_status = status
             current.state.last_error = detail
+            if status == "unknown":
+                current.enabled = False
+                current.state.next_run = None
+                disabled = True
             if count:
                 current.state.consecutive_errors += 1
                 if current.state.consecutive_errors >= self.max_consecutive_errors:

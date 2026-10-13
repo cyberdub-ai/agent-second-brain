@@ -2,6 +2,26 @@
 
 import d_brain.services.runtime as rt
 from d_brain.config import Settings
+from d_brain.services.codex_session import CodexSession
+
+
+def test_codex_backend_is_explicit_and_main_cron_are_isolated(tmp_path):
+    rt.reset()
+    settings = _settings(tmp_path, brain_backend="codex", codex_model="fixture")
+    main = rt.get_session(settings)
+    cron = rt.get_cron_session(settings)
+    assert isinstance(main, CodexSession) and isinstance(cron, CodexSession)
+    assert main is not cron and main.runtime_dir != cron.runtime_dir
+    assert main.model == "fixture"
+    assert not main.supports_steering
+    rt.reset()
+
+
+def test_existing_backend_default_does_not_switch_on_install(tmp_path):
+    from d_brain.services.claude_session import ClaudeSession
+    rt.reset()
+    assert isinstance(rt.get_session(_settings(tmp_path)), ClaudeSession)
+    rt.reset()
 
 
 def _settings(tmp_path, *, persona: bool = True, **over):

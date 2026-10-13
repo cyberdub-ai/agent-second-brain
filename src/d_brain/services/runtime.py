@@ -13,10 +13,11 @@ from pathlib import Path
 
 from d_brain.config import Settings
 from d_brain.services.claude_session import ClaudeSession
+from d_brain.services.codex_session import CodexSession
 from d_brain.services.processor import ClaudeProcessor
 
-_session: ClaudeSession | None = None
-_cron_session: ClaudeSession | None = None
+_session: ClaudeSession | CodexSession | None = None
+_cron_session: ClaudeSession | CodexSession | None = None
 _processor: ClaudeProcessor | None = None
 _ask_lock = asyncio.Lock()
 
@@ -45,7 +46,7 @@ def _persisted_name(settings: Settings) -> str:
 
 def _build_session(
     settings: Settings, *, session_name: str, runtime_dir: Path
-) -> ClaudeSession:
+) -> ClaudeSession | CodexSession:
     # Persona + mcp-config ship with the CODE. Upstream assumes the vault sits
     # inside the project (vault.parent == project); here code lives in ~/stack and
     # the vault in /srv/data (Syncthing), so brain_root overrides that when set.
@@ -62,6 +63,15 @@ def _build_session(
             f"persona file missing or invalid: {brain_prompt} — "
             "refusing to start a personality-less brain"
         )
+    if settings.brain_backend == "codex":
+        return CodexSession(
+            session_name=session_name,
+            work_dir=settings.vault_path,
+            runtime_dir=runtime_dir,
+            system_prompt_file=brain_prompt,
+            codex_bin=settings.codex_bin,
+            model=settings.codex_model or None,
+        )
     return ClaudeSession(
         session_name=session_name,
         work_dir=settings.vault_path,
@@ -72,7 +82,7 @@ def _build_session(
     )
 
 
-def get_session(settings: Settings) -> ClaudeSession:
+def get_session(settings: Settings) -> ClaudeSession | CodexSession:
     """Return the shared interactive ClaudeSession singleton."""
     global _session
     if _session is None:
@@ -84,7 +94,7 @@ def get_session(settings: Settings) -> ClaudeSession:
     return _session
 
 
-def get_cron_session(settings: Settings) -> ClaudeSession:
+def get_cron_session(settings: Settings) -> ClaudeSession | CodexSession:
     """Return the cron brain — a second, isolated ClaudeSession.
 
     Same persona and vault as the main brain, but its own tmux session and
