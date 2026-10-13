@@ -19,6 +19,9 @@ from d_brain.services.runtime import get_ask_lock, get_session
 logger = logging.getLogger(__name__)
 
 _STATUS_MESSAGES = {
+    "unknown": (
+        "⚠️ Исход предыдущей задачи не подтверждён. Повтор остановлен до проверки."
+    ),
     "rate_limited": "⏳ Лимит подписки исчерпан. Вернусь, когда он обновится.",
     "logged_out": "🔑 Нужен повторный вход. Админу: dbrain login.",
     "timeout": "⌛ Превышено время ожидания ответа. Попробуй ещё раз.",
@@ -67,6 +70,10 @@ class ChatSessionManager:
         """Fire-and-forget a client-side Claude Code command into the session."""
         async with get_ask_lock():
             await asyncio.to_thread(self._session.send_control, text)
+
+    @property
+    def supports_steering(self) -> bool:
+        return getattr(self._session, "supports_steering", True)
 
     # ── steering: deliberately NOT under the ask-lock — the lock is held by
     # the in-flight turn these calls are aimed at.

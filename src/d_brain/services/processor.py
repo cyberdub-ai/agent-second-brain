@@ -13,11 +13,13 @@ from pathlib import Path
 from typing import Any
 
 from d_brain.services.claude_session import DEFAULT_TIMEOUT, AskResult, ClaudeSession
+from d_brain.services.codex_session import CodexSession
 
 logger = logging.getLogger(__name__)
 
 # User-facing messages for non-ok session outcomes (Telegram HTML).
 _STATUS_MESSAGES = {
+    "unknown": "⚠️ Исход задачи не подтверждён; автоматический повтор остановлен.",
     "rate_limited": "⏳ <b>Лимит подписки исчерпан.</b> Вернусь, когда он обновится.",
     "logged_out": (
         "🔑 <b>Сессии нужен повторный вход.</b> Админу: <code>dbrain login</code>."
@@ -33,7 +35,7 @@ class ClaudeProcessor:
     def __init__(
         self,
         vault_path: Path,
-        session: ClaudeSession | None = None,
+        session: ClaudeSession | CodexSession | None = None,
     ) -> None:
         self.vault_path = Path(vault_path)
         self.session = session

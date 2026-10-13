@@ -24,6 +24,50 @@ class FakeBot:
         pass
 
 
+def test_codex_concurrent_text_queues_instead_of_steering(monkeypatch):
+    from d_brain.bot.handlers import chat
+
+    class ExecManager(FakeManager):
+        supports_steering = False
+
+        def is_turn_active(self):
+            return True
+
+        async def steer(self, text):
+            raise AssertionError("exec must queue, not steer")
+
+    manager, bot = ExecManager(), FakeBot()
+    monkeypatch.setattr(chat, "_get_manager", lambda: manager)
+    asyncio.run(chat._dispatch_text(bot, 10, 1, "queued"))
+    assert manager.sent == [(1, "queued")]
+
+
+def test_codex_unsupported_model_control_is_not_claimed_sent(monkeypatch):
+    from d_brain.bot.handlers import chat
+
+    manager, bot = FakeManager(), FakeBot()
+    manager.supports_steering = False
+    monkeypatch.setattr(chat, "_get_manager", lambda: manager)
+    asyncio.run(chat._dispatch_text(bot, 10, 1, "/model"))
+    assert "поддерживает только /clear" in bot.messages[0][1]
+    assert not manager.sent
+
+
+def test_codex_clear_unknown_is_explained_without_reset(monkeypatch):
+    from d_brain.bot.handlers import chat
+
+    class ExecManager(FakeManager):
+        supports_steering = False
+
+        async def send_control(self, text):
+            raise RuntimeError("pending outcome")
+
+    manager, bot = ExecManager(), FakeBot()
+    monkeypatch.setattr(chat, "_get_manager", lambda: manager)
+    asyncio.run(chat._dispatch_text(bot, 10, 1, "/clear"))
+    assert "сброс остановлен" in bot.messages[0][1]
+
+
 def test_text_message_routed_immediately(monkeypatch):
     """v3.0: an incoming message reaches the session manager immediately —
     no debounce buffer, no delayed flush."""
