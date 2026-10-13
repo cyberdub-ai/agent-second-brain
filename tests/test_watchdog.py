@@ -61,6 +61,31 @@ def make_wd(tmp_path, session, *, disk_free=10_000_000_000, clock=None, alerts=N
     )
 
 
+def test_codex_unknown_outcome_stays_pending_without_respawn(tmp_path):
+    from d_brain.services.codex_session import CodexSession
+
+    persona = tmp_path / "persona.md"
+    persona.write_text("# d-brain session contract")
+    runtime = tmp_path / "rt"
+    runtime.mkdir()
+    marker = runtime / "codex-inflight.json"
+    marker.write_text('{"status":"unknown"}')
+
+    def must_not_spawn(*args, **kwargs):
+        raise AssertionError("watchdog may not launch a new client")
+
+    session = CodexSession("fixture", tmp_path, runtime,
+                           system_prompt_file=persona, popen=must_not_spawn)
+    clock = {"now": 1000.0}
+    alerts = []
+    wd = make_wd(tmp_path, session, clock=clock, alerts=alerts)
+    wd.check_once()
+    clock["now"] += 301
+    assert wd.check_once() == "recover_deferred"
+    assert marker.read_text() == '{"status":"unknown"}'
+    assert alerts == []
+
+
 # ── basic states ─────────────────────────────────────────────────────────
 
 

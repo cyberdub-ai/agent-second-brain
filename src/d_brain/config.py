@@ -1,6 +1,7 @@
 """Application configuration using Pydantic Settings."""
 
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -55,6 +56,9 @@ class Settings(BaseSettings):
         default="",
         description="Model for the session (empty = Claude Code default)",
     )
+    brain_backend: Literal["claude", "codex"] = "claude"
+    codex_bin: str = "codex"
+    codex_model: str = ""
     tz: str = Field(default="UTC", description="Timezone for timers/reports")
 
     # ── cron (scheduled jobs in the second brain session) ────────────

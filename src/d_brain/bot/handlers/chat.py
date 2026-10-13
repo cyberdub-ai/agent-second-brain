@@ -82,7 +82,23 @@ async def _dispatch_text(bot: Bot, chat_id: int, user_id: int, text: str) -> Non
     normal turn (incl. /skill-name) → session via the marker path."""
     kind = classify_command(text)
     if kind == "control":
-        await _get_manager().send_control(text)
+        manager = _get_manager()
+        if not getattr(manager, "supports_steering", True):
+            if text != "/clear":
+                await bot.send_message(
+                    chat_id, "Codex exec поддерживает только /clear."
+                )
+                return
+            try:
+                await manager.send_control(text)
+            except (RuntimeError, ValueError):
+                await bot.send_message(
+                    chat_id,
+                    "Исход задачи не подтверждён; сброс остановлен до проверки.",
+                )
+                return
+        else:
+            await manager.send_control(text)
         await bot.send_message(
             chat_id, f"⌨️ <code>{html.escape(text)}</code> отправлена в сессию."
         )
@@ -97,6 +113,9 @@ async def _dispatch_text(bot: Bot, chat_id: int, user_id: int, text: str) -> Non
 
     manager = _get_manager()
     mode = classify_concurrent_input(text, manager.is_turn_active())
+    if mode == "steer" and not getattr(manager, "supports_steering", True):
+        # exec has no mid-turn steering; send_message serializes on ask-lock.
+        mode = "ask"
     if mode == "interrupt":
         await manager.interrupt()
         await bot.send_message(chat_id, "⏹ Останавливаю текущий ответ.")
